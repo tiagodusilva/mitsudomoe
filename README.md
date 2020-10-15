@@ -1,2 +1,2 @@
 # mitsudomoe
-The project developed for PLOP.
+The project developed for PLOG.
