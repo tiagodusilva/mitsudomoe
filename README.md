@@ -4,7 +4,7 @@ Projeto desenvolvido no âmbito da unidade curricular PLOG.
 ## Identificação
 
 ### Grupo Mitsudomoe_5
-* Tiago Duarte da Silva - up... - Turma 3
+* Tiago Duarte da Silva - up201806516 - Turma 3
 * Ricardo Jorge Cruz Fontão - up201806317 - Turma 3
 
 ## Regras de jogo
@@ -21,11 +21,11 @@ Chegar com as 3 bolas ao canto do jogador adversário.
 
 * Tabuleiro de 5x5
 * 3 bolas para cada jogador
-* 8 aneis para cada jogador
+* 8 anéis para cada jogador
 
 #### Preparação
 
-Cada jogador começa por colocar 3 aneis no seu canto e 1 bola em cima de cada anel conforme a imagem.
+Cada jogador começa por colocar 3 anéis no seu canto e 1 bola em cima de cada anel conforme a imagem.
 
 ![Initial board](docs/images/initial_board.png)
 
@@ -39,12 +39,12 @@ Cada jogador começa por colocar 3 aneis no seu canto e 1 bola em cima de cada a
 
 Um turno consiste em dois passos:
 
-1. Colocar em jogo ou mexer um dos próprios aneis
+1. Colocar no tabuleiro ou mexer um dos próprios aneis
 2. Mexer uma das próprias bolas
 
 ##### Mover um anel
 
-Nesta fase podemos colocar um anel de fora do tabuleiro ou recolocar um que esteja já em jogo. Só podem ser movidos aneis que estejam expostos (não tem qualquer bola ou anel por cima). O lugar onde se coloca o anel jogado pode ser qualquer um que não tenha uma bola em cima. Se tiver aneis nessa casa coloca-se por cima deles.
+Nesta fase podemos colocar um anel de fora do tabuleiro ou recolocar um que esteja já em jogo. Só podem ser movidos anéis que estejam expostos (não tenham qualquer bola ou anel por cima). O lugar onde se coloca o anel jogado pode ser qualquer um que não tenha uma bola em cima. Se tiver anéis nessa casa coloca-se por cima deles.
 
 ##### Mexer uma bola
 
