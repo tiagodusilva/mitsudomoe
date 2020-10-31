@@ -7,9 +7,6 @@ ite(I, T, _) :-
 ite(_, _, E) :-
     E.
 
-it(I, T) :-
-    I, !, T.
-
 clone([],[]).
 clone([H|T],[H|Z]):- clone(T,Z).
 
@@ -21,13 +18,36 @@ clone([H|T],[H|Z]):- clone(T,Z).
 % 3 : White Ball : 9675 :
 % 4 : Black Ball : 9679 :
 code(0, 32).
-% code(1, 9651).
-% code(2, 9650).
-code(1, 9645).
-code(2, 9644).
+code(1, 9633).
+code(2, 9632).
 code(3, 9675).
 code(4, 9679).
 
+
+% If then else like
+print_number_with_line(Number) :-
+    Number > 10, !,
+    X is Number // 10,
+    Y is Number rem 10,
+    digit_code(X, Code1),
+    digit_code(Y, Code2),
+    put_code(Code1),
+    put_code(Code2).
+print_number_with_line(Number) :-
+    digit_code(Number, Code1),
+    put_code(Code1),
+    put_code(9472).
+
+digit_code(0, 48).
+digit_code(1, 49).
+digit_code(2, 50).
+digit_code(3, 51).
+digit_code(4, 52).
+digit_code(5, 53).
+digit_code(6, 54).
+digit_code(7, 55).
+digit_code(8, 56).
+digit_code(9, 57).
 
 play :-
     initial(GameState),
@@ -41,7 +61,7 @@ initial(GameState) :-
         [  % Game board (yeah, really)
             [ [],     [],     [],  [2, 4], [2, 4]],
             [ [],     [],     [],  [],     [2, 4]],
-            [ [],     [1],    [],  [],     []],
+            [ [],     [],     [],  [],     []],
             [ [1, 3], [],     [],  [],     []],
             [ [1, 3], [1, 3], [],  [],     []]
         ],
@@ -69,11 +89,13 @@ display_game(GameState, Player) :-
     nl,
     get_white_rings(GameState, WhiteRings),
     write('Unplayed white rings:'),
-    print_remaining_pieces(WhiteRings, 9651),
+    code(1, WhiteRingCode),
+    print_remaining_pieces(WhiteRings, WhiteRingCode),
     nl,
     get_black_rings(GameState, BlackRings),
     write('Unplayed black rings:'),
-    print_remaining_pieces(BlackRings, 9650),
+    code(2, BlackRingCode),
+    print_remaining_pieces(BlackRings, BlackRingCode),
     nl.
 
 % boundary(vert, 9474).
@@ -197,10 +219,10 @@ print_stack(Stack, Elem) :-
     put_code(Char).
 
 print_line_bot([]).
-print_line_bot([_ | Line]) :-
+print_line_bot([Stack | Line]) :-
+    length(Stack, StackLength),
     put_code(9492),
-    put_code(9472),
-    put_code(9472),
+    print_number_with_line(StackLength),
     put_code(9472),
     put_code(9472),
     put_code(9472),
@@ -219,7 +241,7 @@ get_top_elements([], _, Result) :-
     Result = 0.
 get_top_elements([H|_], 0, Result) :-
     Result = H.
-get_top_elements([H|T], Number, Result) :-
+get_top_elements([_|T], Number, Result) :-
     NumberNext is Number - 1,
     get_top_elements(T, NumberNext, Result).
 
