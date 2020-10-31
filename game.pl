@@ -126,6 +126,8 @@ print_remaining_pieces(NumPieces, PieceCode) :-
 print_top_letters([], _).
 print_top_letters([_ | Board], Char) :-
     put_char(' '),
+    put_char(' '),
+    put_char(' '),
     put_code(Char),
     put_char(' '),
     put_char(' '),
