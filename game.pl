@@ -7,14 +7,24 @@ ite(I, T, _) :-
 ite(_, _, E) :-
     E.
 
+it(I, T) :-
+    I, !, T.
+
+clone([],[]).
+clone([H|T],[H|Z]):- clone(T,Z).
+
 % GAME:
 
-% 1 : White Ring :
-% 2 : Black Ring : 
-% 3 : White Ball : 
-% 4 : Black Ball : 
-code(1, 9651).
-code(2, 9650).
+% 0 : Nothing    : 32   : ' '
+% 1 : White Ring : 9651 :
+% 2 : Black Ring : 9650 :
+% 3 : White Ball : 9675 :
+% 4 : Black Ball : 9679 :
+code(0, 32).
+% code(1, 9651).
+% code(2, 9650).
+code(1, 9645).
+code(2, 9644).
 code(3, 9675).
 code(4, 9679).
 
@@ -31,7 +41,7 @@ initial(GameState) :-
         [  % Game board (yeah, really)
             [ [],     [],     [],  [2, 4], [2, 4]],
             [ [],     [],     [],  [],     [2, 4]],
-            [ [],     [],     [],  [],     []],
+            [ [],     [1],    [],  [],     []],
             [ [1, 3], [],     [],  [],     []],
             [ [1, 3], [1, 3], [],  [],     []]
         ],
@@ -89,16 +99,20 @@ print_legend :-
     write('  Legend (only shown once):'),
     nl,
     write('    White Ring  - '),
-    put_code(9651),
+    code(1, Char),
+    put_code(Char),
     nl,
     write('    Black Ring  - '),
-    put_code(9650),
+    code(2, Char1),
+    put_code(Char1),
     nl,
     write('    White Ball  - '),
-    put_code(9675),
+    code(3, Char2),
+    put_code(Char2),
     nl,
     write('    Black Ball  - '),
-    put_code(9679),
+    code(4, Char3),
+    put_code(Char3),
     nl,
     nl.
 
@@ -131,14 +145,20 @@ print_line_padding :-
     put_char(' '),
     put_char(' ').
 
-print_line(Line, Number) :-
+print_line(Line, LineNumber) :-
     print_line_padding,
     print_line_top(Line),
     nl,
+    print_line_padding,
+    print_line_mid(Line, 2),
+    nl,
     put_char(' '),
-    put_code(Number),
+    put_code(LineNumber),
     put_char(' '),
-    print_line_mid(Line),
+    print_line_mid(Line, 1),
+    nl,
+    print_line_padding,
+    print_line_mid(Line, 0),
     nl,
     print_line_padding,
     print_line_bot(Line),
@@ -150,26 +170,28 @@ print_line_top([_ | Line]) :-
     put_code(9472),
     put_code(9472),
     put_code(9472),
+    put_code(9472),
+    put_code(9472),
     put_code(9488),
     print_line_top(Line).
 
-print_line_mid([]).
-print_line_mid([Stack | Line]) :-
+print_line_mid([], _).
+print_line_mid([Stack | Line], Elem) :-
     put_code(9474),
     put_char(' '),
-    print_stack(Stack),
+    put_char(' '),
+    print_stack(Stack, Elem),
+    put_char(' '),
     put_char(' '),
     put_code(9474),
-    print_line_mid(Line).
+    print_line_mid(Line, Elem).
 
 get_piece_at_level(Level, List, Elem) :-
     ite(Level is -1, last(List, Elem), nth0(Level, List, Elem)).
 
-print_stack([]) :-
-    put_char(' ').
-print_stack(Stack) :-
-    last(Stack, Last),
-    code(Last, Char),
+print_stack(Stack, Elem) :-
+    get_top_elems_from_stack(Stack, Elem, Result),
+    code(Result, Char),
     put_code(Char).
 
 print_line_bot([]).
@@ -178,6 +200,40 @@ print_line_bot([_ | Line]) :-
     put_code(9472),
     put_code(9472),
     put_code(9472),
+    put_code(9472),
+    put_code(9472),
     put_code(9496),
     print_line_bot(Line).
 
+
+get_top_elems_from_stack(ReverseStack, Amount, Result) :-
+    length(ReverseStack, ReverseLength),
+    ite(ReverseLength >= 3, clone(ReverseStack, AppendedStack), true),
+    ite(length(ReverseStack, 2), append_zeros(ReverseStack, 1, AppendedStack), true),
+    ite(length(ReverseStack, 1), append_zeros(ReverseStack, 2, AppendedStack), true),
+    get_top_elements(AppendedStack, Amount, Result).
+
+get_top_elements([], _, Result) :-
+    Result = 0.
+get_top_elements([H|_], 0, Result) :-
+    Result = H.
+get_top_elements([H|T], Number, Result) :-
+    NumberNext is Number - 1,
+    get_top_elements(T, NumberNext, Result).
+
+
+% get_stuffed_stack(Stack, Number, Result) :-
+% 
+%
+%
+%
+%
+%
+
+append_zeros(Input, 0, Result):- clone(Input, Result).
+append_zeros(Input, Number, Result) :- 
+    reverse(Input, Input1),
+    ResultAux = [0|Input1],
+    reverse(ResultAux, ResultAux2),
+    NumberNext is Number - 1,
+    append_zeros(ResultAux2, NumberNext, Result).
