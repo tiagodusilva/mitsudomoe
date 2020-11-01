@@ -40,6 +40,9 @@ Um turno consiste em dois passos:
 1. Colocar no tabuleiro ou mexer um dos próprios aneis
 2. Mexer uma das próprias bolas
 
+Se não for possível uma jogada, o jogador perde automaticamente.
+No caso de existirem 3 bolas **de qualquer cor** nos home spaces de um jogador no final do seu turno, ele perderá o jogo.
+
 #### Mover um anel
 
 Nesta fase podemos colocar um anel de fora do tabuleiro ou recolocar um que esteja já em jogo. Só podem ser movidos anéis que estejam expostos (não tenham qualquer bola ou anel por cima). O lugar onde se coloca o anel jogado pode ser qualquer um que não tenha uma bola em cima. Se tiver anéis nessa casa coloca-se por cima deles.

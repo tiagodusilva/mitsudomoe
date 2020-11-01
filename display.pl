@@ -57,6 +57,8 @@ display_game(GameState, Player) :-
     write('Unplayed black rings:'),
     code(2, BlackRingCode),
     print_remaining_pieces(BlackRings, BlackRingCode),
+    % nl,
+    % print_player(Player),
     nl.
 
 % boundary(vert, 9474).
@@ -65,6 +67,8 @@ display_game(GameState, Player) :-
 % boundary(top_right, 9488).
 % boundary(bot_left, 9492).
 % boundary(bot_right, 9496).
+
+% print_player(Player).
 
 print_title :-
     nl,nl,
@@ -135,7 +139,7 @@ print_line(Line, LineNumber) :-
     print_line_top(Line),
     nl,
     print_line_padding,
-    print_line_mid(Line, 2),
+    print_line_mid(Line, 0),
     nl,
     put_char(' '),
     put_code(LineNumber),
@@ -143,7 +147,7 @@ print_line(Line, LineNumber) :-
     print_line_mid(Line, 1),
     nl,
     print_line_padding,
-    print_line_mid(Line, 0),
+    print_line_mid(Line, 2),
     nl,
     print_line_padding,
     print_line_bot(Line),
@@ -175,7 +179,7 @@ get_piece_at_level(Level, List, Elem) :-
     ite(Level is -1, last(List, Elem), nth0(Level, List, Elem)).
 
 print_stack(Stack, Elem) :-
-    get_top_elems_from_stack(Stack, Elem, Result),
+    get_stuffed_elem_from_end0(Stack, Elem, 3, Result),
     code(Result, Char),
     put_code(Char).
 
@@ -191,18 +195,12 @@ print_line_bot([Stack | Line]) :-
     print_line_bot(Line).
 
 
-get_top_elems_from_stack(ReverseStack, Amount, Result) :-
-    length(ReverseStack, ReverseLength),
-    ite(ReverseLength >= 3, clone(ReverseStack, AppendedStack), true),
-    ite(length(ReverseStack, 2), append_zeros(ReverseStack, 1, AppendedStack), true),
-    ite(length(ReverseStack, 1), append_zeros(ReverseStack, 2, AppendedStack), true),
-    get_top_elements(AppendedStack, Amount, Result).
-
-get_top_elements([], _, Result) :-
-    Result = 0.
-get_top_elements([H|_], 0, Result) :-
-    Result = H.
-get_top_elements([_|T], Number, Result) :-
-    NumberNext is Number - 1,
-    get_top_elements(T, NumberNext, Result).
-
+get_stuffed_elem_from_end0(Stack, Position, StuffLength, Result) :-
+    length(Stack, Length),
+    ite(
+        Length < StuffLength,
+        % Pos is  Length - Position + (StuffLength - Length), simplified below
+        Pos is  StuffLength - Position,
+        Pos is Length - Position
+    ),
+    ite((Pos =< Length, Pos > 0), nth1(Pos, Stack, Result), Result is 0).
