@@ -1,30 +1,37 @@
 :- use_module(library(lists)).
 
-% 0 : Nothing    : 32   : ' '
-% 1 : White Ring : 9651 :
-% 2 : Black Ring : 9650 :
-% 3 : White Ball : 9675 :
-% 4 : Black Ball : 9679 :
-code(0, 32).
-code(1, 9633).
-code(2, 9632).
-code(3, 9675).
-code(4, 9679).
+put_code_n_times(_, 0).
+put_code_n_times(Code, Times) :-
+    put_code(Code),
+    NextTimes is Times - 1,
+    put_code_n_times(Code, NextTimes).
 
 
-% If then else like
-print_number_with_line(Number) :-
-    Number > 10, !,
-    X is Number // 10,
-    Y is Number rem 10,
-    digit_code(X, Code1),
-    digit_code(Y, Code2),
-    put_code(Code1),
-    put_code(Code2).
-print_number_with_line(Number) :-
-    digit_code(Number, Code1),
-    put_code(Code1),
-    put_code(9472).
+put_char_n_times(_, 0).
+put_char_n_times(Char, Times) :-
+    put_char(Char),
+    NextTimes is Times - 1,
+    put_char_n_times(Char, NextTimes).
+
+
+print_number_with_padding(Number, StuffCharCode) :-
+    ite(
+        Number > 10,
+        (
+            X is Number // 10,
+            Y is Number rem 10,
+            digit_code(X, Code1),
+            digit_code(Y, Code2),
+            put_code(Code1),
+            put_code(Code2)
+        ),
+        (
+            digit_code(Number, Code1),
+            put_code(Code1),
+            put_code(StuffCharCode)
+        )
+    ).
+
 
 digit_code(0, 48).
 digit_code(1, 49).
@@ -38,37 +45,29 @@ digit_code(8, 56).
 digit_code(9, 57).
 
 
-% GameState, Player
+code(0, 32).
+code(1, 9633).
+code(2, 9632).
+code(3, 9675).
+code(4, 9679).
+
+
 display_game(GameState, Player) :-
+    nl,
+    print_player(Player),
+    nl,
     get_board(GameState, Board),
-    nl,
-    print_line_padding,
-    print_top_letters(Board, 65),  % 65 is 'a'
-    nl,
-    print_board(Board, 48),  % 48 is '0'
-    nl,
+    get_shown_stack_size(GameState, ShownStackSize),
+    print_board(Board, ShownStackSize),
     nl,
     get_white_rings(GameState, WhiteRings),
     write('Unplayed white rings:'),
     code(1, WhiteRingCode),
     print_remaining_pieces(WhiteRings, WhiteRingCode),
-    nl,
     get_black_rings(GameState, BlackRings),
     write('Unplayed black rings:'),
     code(2, BlackRingCode),
-    print_remaining_pieces(BlackRings, BlackRingCode),
-    % nl,
-    % print_player(Player),
-    nl.
-
-% boundary(vert, 9474).
-% boundary(hor, 9472).
-% boundary(top_left, 9484).
-% boundary(top_right, 9488).
-% boundary(bot_left, 9492).
-% boundary(bot_right, 9496).
-
-% print_player(Player).
+    print_remaining_pieces(BlackRings, BlackRingCode).
 
 print_title :-
     nl,nl,
@@ -103,96 +102,119 @@ print_legend :-
     nl,
     nl.
 
-print_remaining_pieces(0, _).
+print_player(0) :-
+    print_line_padding,
+    write('WHITE\'S TURN:'), nl.
+print_player(1) :-
+    print_line_padding,
+    write('BLACK\'S TURN:'), nl.
+
+print_remaining_pieces(0, _) :- nl.
 print_remaining_pieces(NumPieces, PieceCode) :-
     NextPieces is NumPieces - 1,
     put_char(' '),
     put_code(PieceCode),
     print_remaining_pieces(NextPieces, PieceCode).
 
-print_top_letters([], _).
-print_top_letters([_ | Board], Char) :-
-    put_char(' '),
-    put_char(' '),
-    put_char(' '),
-    put_code(Char),
-    put_char(' '),
-    put_char(' '),
-    put_char(' '),
-    NextChar is Char + 1,
-    print_top_letters(Board, NextChar).
+print_top_letters([], _, _) :- nl.
+print_top_letters([_ | Board], CharCode, CellWidth) :-
+    HalfWidth is (CellWidth // 2) + 1,
+    put_char_n_times(' ', HalfWidth),
+    put_code(CharCode),
+    put_char_n_times(' ', HalfWidth),
+    NextCharCode is CharCode + 1,
+    print_top_letters(Board, NextCharCode, CellWidth).
 
 
-print_board([], _).
-print_board([Line | Board], Number) :-
-    print_line(Line, Number),
-    NextNumber is Number + 1,
-    print_board(Board, NextNumber).
+print_board(Board, ShownStackSize) :-
+    % Nearest odd integer (2 -> 3, 3 -> 3)
+    CellWidth is ((ShownStackSize // 2) * 2) + 1,
+    print_line_padding,
+    print_top_letters(Board, 65, CellWidth),  % 65 is 'a'
+    print_board(Board, 0, ShownStackSize, CellWidth).
+
+
+print_board([], _, _, _) :- nl.
+print_board([Line | Board], LineNumber, ShownStackSize, CellWidth) :-
+    print_line(Line, LineNumber, ShownStackSize, CellWidth),
+    NextLineNumber is LineNumber + 1,
+    print_board(Board, NextLineNumber, ShownStackSize, CellWidth).
+
 
 print_line_padding :-
     put_char(' '),
     put_char(' '),
+    put_char(' '),
     put_char(' ').
 
-print_line(Line, LineNumber) :-
-    print_line_padding,
-    print_line_top(Line),
-    nl,
-    print_line_padding,
-    print_line_mid(Line, 0),
-    nl,
-    put_char(' '),
-    put_code(LineNumber),
-    put_char(' '),
-    print_line_mid(Line, 1),
-    nl,
-    print_line_padding,
-    print_line_mid(Line, 2),
-    nl,
-    print_line_padding,
-    print_line_bot(Line),
-    nl.
 
-print_line_top([]).
-print_line_top([_ | Line]) :-
+print_line_number(LineNumber) :-
+    put_char(' '),
+    print_number_with_padding(LineNumber, 32),  % 32 is code for ' '
+    put_char(' ').
+
+
+print_line(Line, LineNumber, ShownStackSize, CellWidth) :-
+    print_line_padding,
+    print_line_top(Line, CellWidth),
+    print_line_mid(Line, LineNumber, ShownStackSize, CellWidth),
+    print_line_padding,
+    print_line_bot(Line, CellWidth).
+
+% boundary(vert, 9474).
+% boundary(hor, 9472).
+% boundary(top_left, 9484).
+% boundary(top_right, 9488).
+% boundary(bot_left, 9492).
+% boundary(bot_right, 9496).
+
+print_line_top([], _) :- nl.
+print_line_top([_ | Line], CellWidth) :-
     put_code(9484),
-    put_code(9472),
-    put_code(9472),
-    put_code(9472),
-    put_code(9472),
-    put_code(9472),
+    put_code_n_times(9472, CellWidth),
     put_code(9488),
-    print_line_top(Line).
+    print_line_top(Line, CellWidth).
 
-print_line_mid([], _).
-print_line_mid([Stack | Line], Elem) :-
-    put_code(9474),
-    put_char(' '),
-    put_char(' '),
-    print_stack(Stack, Elem),
-    put_char(' '),
-    put_char(' '),
-    put_code(9474),
-    print_line_mid(Line, Elem).
 
-get_piece_at_level(Level, List, Elem) :-
-    ite(Level is -1, last(List, Elem), nth0(Level, List, Elem)).
-
-print_stack(Stack, Elem) :-
-    get_stuffed_elem_from_end0(Stack, Elem, 3, Result),
-    code(Result, Char),
-    put_code(Char).
-
-print_line_bot([]).
-print_line_bot([Stack | Line]) :-
-    length(Stack, StackLength),
+print_line_bot([], _) :- nl.
+print_line_bot([Stack | Line], CellWidth) :-
     put_code(9492),
-    print_number_with_line(StackLength),
-    put_code(9472),
-    put_code(9472),
-    put_code(9472),
+    length(Stack, StackLength),
+    print_number_with_padding(StackLength, 9472),
+    CutCellWidth is CellWidth - 2,
+    put_code_n_times(9472, CutCellWidth),
     put_code(9496),
-    print_line_bot(Line).
+    print_line_bot(Line, CellWidth).
+
+
+print_line_mid(Line, LineNumber, NumberOfLevels, CellWidth) :-
+    print_line_mid(Line, LineNumber, NumberOfLevels, 0, CellWidth).
+
+
+print_line_mid(_, _, X, X, _).
+print_line_mid(Line, LineNumber, NumberOfLevels, CurLevel, CellWidth) :-
+    ite(
+        CurLevel is NumberOfLevels // 2,
+        print_line_number(LineNumber),
+        print_line_padding
+    ),
+    print_line_mid_inner(Line, NumberOfLevels, CurLevel, CellWidth),
+    nl,
+    NextLevel is CurLevel + 1,
+    print_line_mid(Line, LineNumber, NumberOfLevels, NextLevel, CellWidth).
+
+
+print_line_mid_inner([], _, _, _).
+print_line_mid_inner([Stack | Line], NumberOfLevels, Elem, CellWidth) :-
+    put_code(9474),
+    HalfWidth is CellWidth // 2,
+    put_char_n_times(' ', HalfWidth),
+    get_stuffed_elem_from_end0(Stack, Elem, NumberOfLevels, Result),
+    code(Result, Char),
+    put_code(Char),
+    put_char_n_times(' ', HalfWidth),
+    put_code(9474),
+    print_line_mid_inner(Line, NumberOfLevels, Elem, CellWidth).
 
 
 get_stuffed_elem_from_end0(Stack, Position, StuffLength, Result) :-

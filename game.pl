@@ -7,5 +7,6 @@ play :-
     initial(GameState),
     print_title,
     print_legend,
+    Player is 0,
     display_game(GameState, Player).
 

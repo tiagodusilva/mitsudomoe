@@ -7,7 +7,7 @@
 
 initial(GameState) :-
     GameState = [
-        [  % Game board (yeah, really)
+        [  % Game board
             [ [],     [],     [],  [2, 4], [2, 4]],
             [ [],     [],     [],  [],     [2, 4]],
             [ [],     [],     [],  [],     []],
@@ -15,33 +15,36 @@ initial(GameState) :-
             [ [1, 3], [1, 3], [],  [],     []]
         ],
         5, % Unplayed white rings
-        5  % Unplayed black rings
+        5, % Unplayed black rings
+        3  % Shown Stack Size
     ].
 
 mid_game(GameState) :-
     GameState = [
-        [  % Game board (yeah, really)
-            [ [],     [],     [],  [2, 1], [1, 3]],
-            [ [],     [1, 3],     [],  [2, 4],     [2, 4]],
-            [ [],     [1],     [2, 1, 3],  [2],     [1]],
-            [ [2, 4], [2, 1],     [2],  [],     []],
-            [ [], [], [],  [],     []]
+        [  % Game board
+            [ [],     [],     [],        [2, 1], [1, 3]],
+            [ [],     [1, 3], [],        [2, 4], [2, 4]],
+            [ [],     [1],    [2, 1, 3], [2],    [1]],
+            [ [2, 4], [2, 1], [2],       [],     []],
+            [ [],     [],     [],        [],     []]
         ],
         1, % Unplayed white rings
-        0  % Unplayed black rings
+        0, % Unplayed black rings
+        4  % Shown Stack Size
     ].
 
 end_game(GameState) :-
     GameState = [
-        [  % Game board (yeah, really)
-            [ [],     [],     [],  [1, 2, 1, 3], [1, 3]],
-            [ [],     [],     [],  [2, 4],     [2, 1, 3]],
-            [ [],     [1],     [2, 1],  [],     []],
-            [ [2, 4], [2, 1],     [2, 1],  [],     []],
-            [ [2, 4], [], [],  [],     []]
+        [  % Game board
+            [ [],     [],     [],     [1, 2, 1, 3], [1, 3]],
+            [ [],     [],     [],     [2, 4],       [2, 1, 3]],
+            [ [],     [1],    [2, 1], [],           []],
+            [ [2, 4], [2, 1], [2, 1], [],           []],
+            [ [2, 4], [],     [],     [],           []]
         ],
         0, % Unplayed white rings
-        0  % Unplayed black rings
+        0, % Unplayed black rings
+        5  % Shown Stack Size
     ].
 
 get_board(GameState, Board) :-
@@ -53,3 +56,5 @@ get_white_rings(GameState, WhiteRings) :-
 get_black_rings(GameState, BlackRings) :-
     nth0(2, GameState, BlackRings).
 
+get_shown_stack_size(GameState, ShownStackSize) :-
+    nth0(3, GameState, ShownStackSize).
