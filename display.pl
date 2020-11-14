@@ -44,7 +44,10 @@ digit_code(7, 55).
 digit_code(8, 56).
 digit_code(9, 57).
 
-
+% 1 : White Ring : 9651 :
+% 2 : Black Ring : 9650 :
+% 3 : White Ball : 9675 :
+% 4 : Black Ball : 9679 :
 code(0, 32).
 code(1, 9633).
 code(2, 9632).
@@ -102,10 +105,10 @@ print_legend :-
     nl,
     nl.
 
-print_player(0) :-
+print_player(white) :-
     print_line_padding,
     write('WHITE\'S TURN:'), nl.
-print_player(1) :-
+print_player(black) :-
     print_line_padding,
     write('BLACK\'S TURN:'), nl.
 
