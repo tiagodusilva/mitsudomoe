@@ -28,5 +28,6 @@ test_game(GameState) :-
 play_test(Test) :-
     test_game(GameState),
     Player = white,
-    can_move_ball(GameState, Player, 4, 0, 1, 3, Test).
-    % display_game(GameState, Player).
+    move_ball(GameState, white, 4, 0, 4, 1, NewGameState, _),
+    move_ball(NewGameState, white, 3, 1, 1, 3, NewGameState1, Test),
+    display_game(NewGameState1, Player).

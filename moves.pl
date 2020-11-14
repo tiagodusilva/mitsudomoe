@@ -14,7 +14,9 @@ can_ring_be_placed(Stack) :-
     last(Stack, LastElem),
     is_ring(LastElem).
 
-
+can_ball_be_placed(Stack, Player) :-
+    last(Stack, LastElem),
+    owns_ring(Player, LastElem).
 
 % ------------------------
 %      RING MOVEMENT
@@ -41,6 +43,8 @@ remove_ring(GameState, Player, RowIndex, ColIndex, NewGameState) :-
     replace_stack(GameState, RowIndex, ColIndex, PoppedStack, NewGameState).
 
 move_ring(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState) :-
+    % Cannot move to the same place
+    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
     remove_ring(GameState, Player, FromRowIndex, FromColIndex, RemovedGameState),
     place_ring(RemovedGameState, Player, ToRowIndex, ToColIndex, NewGameState).
 
@@ -49,52 +53,6 @@ move_ring(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex,
 % ------------------------
 %      BALL MOVEMENT
 % ------------------------
-is_adjacent(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex) :-
-    RowAdj is abs(FromRowIndex - ToRowIndex),
-    ColAdj is abs(FromColIndex - ToColIndex),
-    % Same cell
-    (RowAdj + ColAdj) =\= 0,
-    RowAdj =< 1,
-    ColAdj =< 1.
-
-% Given a value, set it to -1, 0 or 1
-normalize_delta(Value, Delta) :-
-    ite(
-        Value =:= 0,
-        Delta is 0,
-        (
-            ite(
-                Value < 0,
-                Delta is -1,
-                Delta is 1
-            )
-        )
-    ).
-
-get_direction(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, DeltaRow, DeltaCol) :-
-    RowAdj is (ToRowIndex - FromRowIndex),
-    ColAdj is (ToColIndex - FromColIndex),
-    % Verify if perfect diagonal, horizontal or vertical (in order)
-    \+ (
-        \+ (
-            RowAdj =\= 0,
-            ColAdj =\= 0,
-            % Only true if perfect diagonal
-            abs(RowAdj) =:= abs(ColAdj)
-        ),
-        \+ (
-            RowAdj =\= 0,
-            ColAdj =:= 0
-        ),
-        \+ (
-            RowAdj =:= 0,
-            ColAdj =\= 0
-        )
-    ),
-    normalize_delta(RowAdj, DeltaRow),
-    normalize_delta(ColAdj, DeltaCol).
-
-
 can_vault(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace) :-
     % Already fails if not a valid trajectory in get_direction
     get_direction(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, DeltaRow, DeltaCol),
@@ -120,6 +78,8 @@ can_vault_aux(GameState, Player, RowIndex, ColIndex, ToRowIndex, ToColIndex, Del
 
 
 can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace) :-
+    % Verify it is not the same position
+    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
     % Verify if there is a player ball
     get_top_elem(GameState, FromRowIndex, FromColIndex, FromLast),
     owns_ball(Player, FromLast),
@@ -134,9 +94,26 @@ can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIn
         can_vault(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace)
     ).
 
+remove_ball(GameState, Player, RowIndex, ColIndex, NewGameState) :-
+    get_stack(GameState, RowIndex, ColIndex, Stack),
+    owns_ball(Player, BallCode),
+    append(PoppedStack, [BallCode], Stack),
+    replace_stack(GameState, RowIndex, ColIndex, PoppedStack, NewGameState).
 
-% % To be used for relocating enemy balls because it has no restrictions on movement
-% displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState) :-
+place_ball(GameState, Player, RowIndex, ColIndex, NewGameState) :-
+    get_stack(GameState, RowIndex, ColIndex, Stack),
+    can_ball_be_placed(Stack, Player),
+    owns_ball(Player, BallCode),
+    append(Stack, [BallCode], NewStack),
+    replace_stack(GameState, RowIndex, ColIndex, NewStack, NewGameState).
 
-% % To be used when moving your own ball
-% move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState, BallsToDisplace) :-
+% % To be used for relocating enemy balls because it has less restrictions on movement
+displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState) :-
+    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
+    remove_ball(GameState, Player, FromRowIndex, FromColIndex, RemovedGameState),
+    place_ball(RemovedGameState, Player, ToRowIndex, ToColIndex, NewGameState).
+
+% % To be used when moving your own ball as we must consider vaulting
+move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState, BallsToDisplace) :-
+    can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace),
+    displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState).
