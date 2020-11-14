@@ -63,6 +63,12 @@ is_ring(2).
 is_ball(3).
 is_ball(4).
 
+is_pos_in_bounds(RowIndex, ColIndex) :-
+    RowIndex >= 0,
+    RowIndex < 5,
+    ColIndex >= 0,
+    ColIndex < 5.
+
 % ------------------------
 %         GETTERS
 % ------------------------
@@ -91,6 +97,10 @@ get_row(GameState, RowIndex, Row) :-
 get_stack(GameState, RowIndex, ColIndex, Stack) :-
     get_row(GameState, RowIndex, Row),
     nth0(ColIndex, Row, Stack).
+
+get_top_elem(GameState, RowIndex, ColIndex, TopElem) :-
+    get_stack(GameState, RowIndex, ColIndex, Stack),
+    last(Stack, TopElem).
 
 
 % ------------------------

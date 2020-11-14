@@ -9,12 +9,24 @@ play :-
     print_title,
     print_legend,
     Player = white,
-    place_new_ring(GameState, Player, 3, 0, NewGameState),
-    display_game(NewGameState, Player).
+    display_game(GameState, Player).
+
+test_game(GameState) :-
+    GameState = [
+        [  % Game board
+            [ [],     [],     [],  [2, 4], [2, 4]],
+            [ [],     [],     [],  [1],     [2, 4]],
+            [ [],     [],     [1, 2, 4],  [],     []],
+            [ [1, 3], [1, 3],     [],  [],     []],
+            [ [1, 3], [1], [],  [],     []]
+        ],
+        5, % Unplayed white rings
+        5, % Unplayed black rings
+        3  % Shown Stack Size
+    ].
 
 play_test(Test) :-
-    initial(GameState),
+    test_game(GameState),
     Player = white,
-    place_new_ring(GameState, Player, 2, 3, NewGameState),
-    get_stack(NewGameState, 3, 0, Test),
-    display_game(NewGameState, Player).
+    can_move_ball(GameState, Player, 4, 0, 1, 3, Test).
+    % display_game(GameState, Player).

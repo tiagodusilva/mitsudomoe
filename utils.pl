@@ -5,7 +5,6 @@ ite(I, T, _) :-
 ite(_, _, E) :-
     E.
 
-
 clone([],[]).
 clone([H|T],[H|Z]):- clone(T,Z).
 
