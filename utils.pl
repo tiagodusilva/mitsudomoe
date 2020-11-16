@@ -74,7 +74,7 @@ normalize_delta(Value, Delta) :-
         )
     ).
 
-get_direction(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, DeltaRow, DeltaCol) :-
+get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRow, DeltaCol]) :-
     RowAdj is (ToRowIndex - FromRowIndex),
     ColAdj is (ToColIndex - FromColIndex),
     % Verify if perfect diagonal, horizontal or vertical (in order)

@@ -6,7 +6,8 @@
 :- ensure_loaded('input.pl').
 
 play :-
-    initial(GameState),
+    % initial(GameState),
+    test_game(GameState),
     % print_title,
     % print_legend,
     Player = white,
@@ -17,7 +18,7 @@ game_loop(GameState, Player) :-
     display_game(GameState, Player),
     repeat,
     read_move(GameState, Player, Move),
-    % new_move([-1, -1, 3, 1], [4, 0, 3, 1], [], Player, Move),
+    % new_move([[4, 1], [1, 3]], [[4, 0], [1, 3]], [[[2, 2], [4, 3]]], Player, Move),
     ite(
         move(GameState, Move, NewGameState),
         true,
@@ -33,7 +34,7 @@ test_game(GameState) :-
             [ [],     [],     [],  [1],     [2, 4]],
             [ [],     [],     [1, 2, 4],  [],     []],
             [ [1, 3], [1, 3],     [],  [],     []],
-            [ [1, 3], [1], [],  [],     []]
+            [ [1, 3], [1], [],  [2],     []]
         ],
         5, % Unplayed white rings
         5, % Unplayed black rings

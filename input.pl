@@ -28,10 +28,14 @@ read_move(GameState, Player, Move) :-
     ),
     % Move own Ball
     read_displace('MOVE BALL\n', BallDisplace),
-    % move_ball(GameState, Player, BallDisplace, NewGameState, BallsToDisplace),
+    % RingDisplace = [[-1, -1], [0, 0]],
+    % BallDisplace = [[4, 0], [1, 3]],
+    move_ball(GameState, Player, BallDisplace, NewGameState, BallsToDisplace),
+    next_player(Player, DisplacedPlayer),
+    read_displacements(NewGameState, DisplacedPlayer, BallsToDisplace, [], FinalDisplacements),
     
 
-    new_move(RingDisplace, BallDisplace, [], Player, Move).
+    new_move(RingDisplace, BallDisplace, FinalDisplacements, Player, Move).
 
 
 letter_to_col('a', 0).
@@ -79,5 +83,21 @@ read_displace(Message, Displace) :-
     read_coord_pair('Where would you like to move it to?\n', ToCoords),
     new_displace(FromCoords, ToCoords, Displace).
 
+read_displacements(_, _, [], Displacements, Displacements).
+read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDisplacements) :-
+    read_displace('DISPLACE ENEMY BALLS\n', Displace),
+    % Displace = [[2, 2], [4, 3]],
+    new_displace(FromCoords, _, Displace),
+    delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
+    length(BallsToDisplace, DisplaceLength),
+    length(NewBallsToDisplace, NewDisplaceLength),
+    DisplaceLength =\= NewDisplaceLength,
+    displace_ball(GameState, Player, Displace, NewGameState),
+    append(Displacements, [Displace], NewDisplacements),
+    read_displacements(NewGameState, Player, NewBallsToDisplace, NewDisplacements, FinalDisplacements).
 
-% read_displacements(BallsToDisplace) :-
+
+
+
+
+

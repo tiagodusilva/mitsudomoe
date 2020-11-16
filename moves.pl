@@ -60,7 +60,7 @@ can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToDisplace).
 
 % Can safely ignore the last stack (verification is done previously)
-can_vault_aux(_, _, Coords, Coords, _, _, BallsDisplaced, BallsDisplaced).
+can_vault_aux(_, _, [Coords, Coords], _, BallsDisplaced, BallsDisplaced).
 can_vault_aux(GameState, Player, [FromCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace) :-
     get_top_elem(GameState, FromCoords, TopElem),
     is_ball(TopElem),
@@ -124,4 +124,13 @@ move(GameState, Move, NewGameState) :-
         move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState),
         place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState)
     ),
-    move_ball(RingPhaseGameState, Player, BallDisplace, NewGameState, _).
+    move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, _),
+    next_player(Player, Enemy),
+    relocate_balls(MovedBallGameState, Enemy, BallRelocations, NewGameState).
+
+
+relocate_balls(GameState, _, [], GameState).
+relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState) :-
+    displace_ball(GameState, Player, Relocation, NextGameState),
+    relocate_balls(NextGameState, Player, BallRelocations, FinalGameState).
+
