@@ -1,5 +1,9 @@
 :- use_module(library(lists)).
 
+% ------------------------
+%   GAMESTATE DEFINITION
+% ------------------------
+
 initial(GameState) :-
     GameState = [
         [  % Game board
@@ -47,6 +51,9 @@ end_game(GameState) :-
 % black
 % white
 
+next_player(black, white).
+next_player(white, black).
+
 % STACK CONTENTS
 % 1 : White Ring
 % 2 : Black Ring
@@ -70,7 +77,7 @@ is_pos_in_bounds(RowIndex, ColIndex) :-
     ColIndex < 5.
 
 % ------------------------
-%         GETTERS
+%    GAMESTATE GETTERS
 % ------------------------
 get_board(GameState, Board) :-
     GameState = [Board | _].
@@ -102,6 +109,51 @@ get_top_elem(GameState, RowIndex, ColIndex, TopElem) :-
     get_stack(GameState, RowIndex, ColIndex, Stack),
     last(Stack, TopElem).
 
+
+% ------------------------
+%     MOVE DEFINITION
+% ------------------------
+
+% Displace:
+% from_row
+% from_col
+% to_row
+% to_col
+
+new_displace(FromRow, FromCol, ToRow, ToCol, [FromRow, FromCol, ToRow, ToCol]).
+
+new_displace([FromRow, FromCol], [ToRow, ToCol], [FromRow, FromCol, ToRow, ToCol]).
+
+get_displace_from_row(Displace, FromRow) :-
+    nth0(0, Displace, FromRow).
+
+get_displace_from_col(Displace, FromCol) :-
+    nth0(1, Displace, FromCol).
+
+get_displace_to_row(Displace, ToRow) :-
+    nth0(2, Displace, ToRow).
+
+get_displace_to_col(Displace, ToCol) :-
+    nth0(3, Displace, ToCol).
+
+% Move:
+% ring_displace -> [-1, -1, pos, pos] if placing a ball
+% ball_displace
+% [balls_relocated]
+
+new_move(RingDisplace, BallDisplace, BallRelocations, Player, [RingDisplace, BallDisplace, BallRelocations, Player]).
+
+get_move_ring_displace(Move, RingDisplace) :-
+    nth0(0, Move, RingDisplace).
+
+get_move_ball_displace(Move, BallDisplace) :-
+    nth0(1, Move, BallDisplace).
+
+get_move_balls_relocated(Move, BallRelocations) :-
+    nth0(2, Move, BallRelocations).
+
+get_move_player(Move, Player) :-
+    nth0(3, Move, Player).
 
 % ------------------------
 %         REPLACE

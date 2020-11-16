@@ -3,13 +3,25 @@
 :- ensure_loaded('gameState.pl').
 :- ensure_loaded('utils.pl').
 :- ensure_loaded('moves.pl').
+:- ensure_loaded('input.pl').
 
 play :-
     initial(GameState),
-    print_title,
-    print_legend,
+    % print_title,
+    % print_legend,
     Player = white,
-    display_game(GameState, Player).
+    game_loop(GameState, Player).
+   
+
+game_loop(GameState, Player) :-
+    display_game(GameState, Player),
+    repeat,
+    read_move(GameState, Player, Move),
+    write(Move),
+    % new_move([-1, -1, 3, 1], [4, 0, 3, 1], [], Player, Move),
+    move(GameState, Move, NewGameState),
+    next_player(Player, NextPlayer),
+    game_loop(NewGameState, NextPlayer).
 
 test_game(GameState) :-
     GameState = [
@@ -28,6 +40,4 @@ test_game(GameState) :-
 play_test(Test) :-
     test_game(GameState),
     Player = white,
-    move_ball(GameState, white, 4, 0, 4, 1, NewGameState, _),
-    move_ball(NewGameState, white, 3, 1, 1, 3, NewGameState1, Test),
-    display_game(NewGameState1, Player).
+    read_move(GameState, Player, Test).

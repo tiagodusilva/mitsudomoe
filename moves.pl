@@ -117,3 +117,16 @@ displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIn
 move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState, BallsToDisplace) :-
     can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace),
     displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState).
+
+
+
+move(GameState, Move, NewGameState) :-
+    new_move(RingDisplace, BallDisplace, BallRelocations, Player, Move),
+    RingDisplace = [RingFromRow, RingFromCol, RingToRow, RingToCol],
+    ite(
+        (RingFromRow =\= -1, RingFromCol =\= -1),
+        move_ring(GameState, Player, RingFromRow, RingFromCol, RingToRow, RingToCol, RingPhaseGameState),
+        place_new_ring(GameState, Player, RingToRow, RingToCol, RingPhaseGameState)
+    ),
+    BallDisplace = [BallFromRow, BallFromCol, BallToRow, BallToCol],
+    move_ball(RingPhaseGameState, Player, BallFromRow, BallFromCol, BallToRow, BallToCol, NewGameState, _).
