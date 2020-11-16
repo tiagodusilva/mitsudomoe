@@ -33,7 +33,17 @@ append_zeros(Input, Number, Result) :-
 %   POSITION MANIPULATION
 % ------------------------
 
-is_pos_different(RowIndexA, ColIndexA, RowIndexB, ColIndexB) :-
+is_negative_coords([X, Y]) :-
+    X =\= -1,
+    Y =\= -1.
+
+add_coords([X1, Y1], [X2, Y2], Result) :-
+    Rx is X1 + X2,
+    Ry is Y1 + Y2,
+    Result = [Rx, Ry].
+
+is_pos_different([CoordsA, CoordsB]) :- is_pos_different(CoordsA, CoordsB).
+is_pos_different([RowIndexA, ColIndexA], [RowIndexB, ColIndexB]) :-
     % Either Row or Col must be different
     % With DeMorgan: not (same row AND same col) 
     \+ (
@@ -41,7 +51,8 @@ is_pos_different(RowIndexA, ColIndexA, RowIndexB, ColIndexB) :-
         ColIndexA =:= ColIndexB
     ).
 
-is_adjacent(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex) :-
+is_adjacent([FromCoords, ToCoords]) :- is_adjacent(FromCoords, ToCoords).
+is_adjacent([FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]) :-
     RowAdj is abs(FromRowIndex - ToRowIndex),
     ColAdj is abs(FromColIndex - ToColIndex),
     % Same cell

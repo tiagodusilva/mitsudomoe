@@ -26,9 +26,11 @@ read_move(GameState, Player, Move) :-
             new_displace([-1, -1], PlaceRingCoords, RingDisplace)
         )
     ),
-    write(RingDisplace),
     % Move own Ball
     read_displace('MOVE BALL\n', BallDisplace),
+    % move_ball(GameState, Player, BallDisplace, NewGameState, BallsToDisplace),
+    
+
     new_move(RingDisplace, BallDisplace, [], Player, Move).
 
 
@@ -62,7 +64,7 @@ letter_to_col('z', 25).
 
 read_coord_pair(Message, Coords) :-
     write(Message),
-    write('Please insert row [0 ~ 5] '),
+    write('Please insert row [0 ~ 4] '),
     read_number(Row),
     write('Please insert col [a ~ e] '),
     read_char(ColLetter),
@@ -76,3 +78,6 @@ read_displace(Message, Displace) :-
     read_coord_pair('Which piece would you like to move?\n', FromCoords),
     read_coord_pair('Where would you like to move it to?\n', ToCoords),
     new_displace(FromCoords, ToCoords, Displace).
+
+
+% read_displacements(BallsToDisplace) :-

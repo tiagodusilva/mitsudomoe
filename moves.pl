@@ -21,112 +21,107 @@ can_ball_be_placed(Stack, Player) :-
 % ------------------------
 %      RING MOVEMENT
 % ------------------------
-place_ring(GameState, Player, RowIndex, ColIndex, NewGameState) :-
-    get_stack(GameState, RowIndex, ColIndex, Stack),
+place_ring(GameState, Player, Coords, NewGameState) :-
+    get_stack(GameState, Coords, Stack),
     can_ring_be_placed(Stack),
     owns_ring(Player, RingCode),
     append(Stack, [RingCode], NewStack),
-    replace_stack(GameState, RowIndex, ColIndex, NewStack, NewGameState).
+    replace_stack(GameState, Coords, NewStack, NewGameState).
 
-place_new_ring(GameState, Player, RowIndex, ColIndex, NewGameState) :-
+place_new_ring(GameState, Player, Coords, NewGameState) :-
     % Does the player still have rings to place?
     get_remaining_player_rings(GameState, Player, Rings),
     Rings > 0,
-    place_ring(GameState, Player, RowIndex, ColIndex, PlacedRingGameState),
+    place_ring(GameState, Player, Coords, PlacedRingGameState),
     reduce_remaining_rings(PlacedRingGameState, Player, NewGameState).
 
-remove_ring(GameState, Player, RowIndex, ColIndex, NewGameState) :-
-    get_stack(GameState, RowIndex, ColIndex, Stack),
+remove_ring(GameState, Player, Coords, NewGameState) :-
+    get_stack(GameState, Coords, Stack),
     owns_ring(Player, RingCode),
     % Fails in every case where the player''s ring is NOT on top of the Stack (eg: wrong player ring or a ball)
     append(PoppedStack, [RingCode], Stack),
-    replace_stack(GameState, RowIndex, ColIndex, PoppedStack, NewGameState).
+    replace_stack(GameState, Coords, PoppedStack, NewGameState).
 
-move_ring(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState) :-
+move_ring(GameState, Player, [FromCoords, ToCoords], NewGameState) :-
     % Cannot move to the same place
-    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
-    remove_ring(GameState, Player, FromRowIndex, FromColIndex, RemovedGameState),
-    place_ring(RemovedGameState, Player, ToRowIndex, ToColIndex, NewGameState).
+    is_pos_different(FromCoords, ToCoords),
+    remove_ring(GameState, Player, FromCoords, RemovedGameState),
+    place_ring(RemovedGameState, Player, ToCoords, NewGameState).
 
 
 
 % ------------------------
 %      BALL MOVEMENT
 % ------------------------
-can_vault(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace) :-
+can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     % Already fails if not a valid trajectory in get_direction
-    get_direction(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, DeltaRow, DeltaCol),
-    NextRow is FromRowIndex + DeltaRow,
-    NextCol is FromColIndex + DeltaCol,
-    can_vault_aux(GameState, Player, NextRow, NextCol, ToRowIndex, ToColIndex, DeltaRow, DeltaCol, [], BallsToDisplace).
+    get_direction([FromCoords, ToCoords], Delta),
+    add_coords(FromCoords, Delta, NextCoords),
+    can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToDisplace).
 
 % Can safely ignore the last stack (verification is done previously)
-can_vault_aux(_, _, RowIndex, ColIndex, RowIndex, ColIndex, _, _, BallsDisplaced, BallsDisplaced).
-can_vault_aux(GameState, Player, RowIndex, ColIndex, ToRowIndex, ToColIndex, DeltaRow, DeltaCol, BallsDisplaced, BallsToDisplace) :-
-    get_top_elem(GameState, RowIndex, ColIndex, TopElem),
+can_vault_aux(_, _, Coords, Coords, _, _, BallsDisplaced, BallsDisplaced).
+can_vault_aux(GameState, Player, [FromCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace) :-
+    get_top_elem(GameState, FromCoords, TopElem),
     is_ball(TopElem),
-    NextRow is RowIndex + DeltaRow,
-    NextCol is ColIndex + DeltaCol,
+    add_coords(FromCoords, Delta, NextCoords),
     ite(
         owns_ball(Player, TopElem),
-        can_vault_aux(GameState, Player, NextRow, NextCol, ToRowIndex, ToColIndex, DeltaRow, DeltaCol, BallsDisplaced, BallsToDisplace),
+        can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace),
         (
-            append(BallsDisplaced, [[RowIndex, ColIndex]], NewBallsDisplaced),
-            can_vault_aux(GameState, Player, NextRow, NextCol, ToRowIndex, ToColIndex, DeltaRow, DeltaCol, NewBallsDisplaced, BallsToDisplace)
+            append(BallsDisplaced, [FromCoords], NewBallsDisplaced),
+            can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, NewBallsDisplaced, BallsToDisplace)
         )
     ).
 
 
-can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace) :-
+can_move_ball(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     % Verify it is not the same position
-    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
+    is_pos_different(FromCoords, ToCoords),
     % Verify if there is a player ball
-    get_top_elem(GameState, FromRowIndex, FromColIndex, FromLast),
+    get_top_elem(GameState, FromCoords, FromLast),
     owns_ball(Player, FromLast),
     % Verify if there is a player ring to move to
-    get_top_elem(GameState, ToRowIndex, ToColIndex, ToLast),
+    get_top_elem(GameState, ToCoords, ToLast),
     owns_ring(Player, ToLast),
     ite(
-        is_adjacent(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
+        is_adjacent(FromCoords, ToCoords),
         % If it is directly adjacent
         BallsToDisplace = [],
         % Can we vault and if so what balls need to be relocated
-        can_vault(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace)
+        can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace)
     ).
 
-remove_ball(GameState, Player, RowIndex, ColIndex, NewGameState) :-
-    get_stack(GameState, RowIndex, ColIndex, Stack),
+remove_ball(GameState, Player, Coords, NewGameState) :-
+    get_stack(GameState, Coords, Stack),
     owns_ball(Player, BallCode),
     append(PoppedStack, [BallCode], Stack),
-    replace_stack(GameState, RowIndex, ColIndex, PoppedStack, NewGameState).
+    replace_stack(GameState, Coords, PoppedStack, NewGameState).
 
-place_ball(GameState, Player, RowIndex, ColIndex, NewGameState) :-
-    get_stack(GameState, RowIndex, ColIndex, Stack),
+place_ball(GameState, Player, Coords, NewGameState) :-
+    get_stack(GameState, Coords, Stack),
     can_ball_be_placed(Stack, Player),
     owns_ball(Player, BallCode),
     append(Stack, [BallCode], NewStack),
-    replace_stack(GameState, RowIndex, ColIndex, NewStack, NewGameState).
+    replace_stack(GameState, Coords, NewStack, NewGameState).
 
 % % To be used for relocating enemy balls because it has less restrictions on movement
-displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState) :-
-    is_pos_different(FromRowIndex, FromColIndex, ToRowIndex, ToColIndex),
-    remove_ball(GameState, Player, FromRowIndex, FromColIndex, RemovedGameState),
-    place_ball(RemovedGameState, Player, ToRowIndex, ToColIndex, NewGameState).
+displace_ball(GameState, Player, [FromCoords, ToCoords], NewGameState) :-
+    is_pos_different(FromCoords, ToCoords),
+    remove_ball(GameState, Player, FromCoords, RemovedGameState),
+    place_ball(RemovedGameState, Player, ToCoords, NewGameState).
 
 % % To be used when moving your own ball as we must consider vaulting
-move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState, BallsToDisplace) :-
-    can_move_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, BallsToDisplace),
-    displace_ball(GameState, Player, FromRowIndex, FromColIndex, ToRowIndex, ToColIndex, NewGameState).
-
+move_ball(GameState, Player, Displace, NewGameState, BallsToDisplace) :-
+    can_move_ball(GameState, Player, Displace, BallsToDisplace),
+    displace_ball(GameState, Player, Displace, NewGameState).
 
 
 move(GameState, Move, NewGameState) :-
-    new_move(RingDisplace, BallDisplace, BallRelocations, Player, Move),
-    RingDisplace = [RingFromRow, RingFromCol, RingToRow, RingToCol],
+    new_move([RingFromCoords, RingToCoords], BallDisplace, BallRelocations, Player, Move),
     ite(
-        (RingFromRow =\= -1, RingFromCol =\= -1),
-        move_ring(GameState, Player, RingFromRow, RingFromCol, RingToRow, RingToCol, RingPhaseGameState),
-        place_new_ring(GameState, Player, RingToRow, RingToCol, RingPhaseGameState)
+        is_negative_coords(RingFromCoords),
+        move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState),
+        place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState)
     ),
-    BallDisplace = [BallFromRow, BallFromCol, BallToRow, BallToCol],
-    move_ball(RingPhaseGameState, Player, BallFromRow, BallFromCol, BallToRow, BallToCol, NewGameState, _).
+    move_ball(RingPhaseGameState, Player, BallDisplace, NewGameState, _).

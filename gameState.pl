@@ -101,12 +101,12 @@ get_row(GameState, RowIndex, Row) :-
     get_board(GameState, Board),
     nth0(RowIndex, Board, Row).
 
-get_stack(GameState, RowIndex, ColIndex, Stack) :-
+get_stack(GameState, [RowIndex, ColIndex], Stack) :-
     get_row(GameState, RowIndex, Row),
     nth0(ColIndex, Row, Stack).
 
-get_top_elem(GameState, RowIndex, ColIndex, TopElem) :-
-    get_stack(GameState, RowIndex, ColIndex, Stack),
+get_top_elem(GameState, Coords, TopElem) :-
+    get_stack(GameState, Coords, Stack),
     last(Stack, TopElem).
 
 
@@ -120,21 +120,25 @@ get_top_elem(GameState, RowIndex, ColIndex, TopElem) :-
 % to_row
 % to_col
 
-new_displace(FromRow, FromCol, ToRow, ToCol, [FromRow, FromCol, ToRow, ToCol]).
+new_displace(FromRow, FromCol, ToRow, ToCol, [[FromRow, FromCol], [ToRow, ToCol]]).
 
-new_displace([FromRow, FromCol], [ToRow, ToCol], [FromRow, FromCol, ToRow, ToCol]).
+new_displace(FromCoords, ToCoords, [FromCoords, ToCoords]).
 
 get_displace_from_row(Displace, FromRow) :-
-    nth0(0, Displace, FromRow).
+    nth0(0, Displace, FromCoords),
+    nth0(0, FromCoords, FromRow).
 
 get_displace_from_col(Displace, FromCol) :-
-    nth0(1, Displace, FromCol).
+    nth0(0, Displace, FromCoords),
+    nth0(1, FromCoords, FromCol).
 
 get_displace_to_row(Displace, ToRow) :-
-    nth0(2, Displace, ToRow).
+    nth0(1, Displace, ToCoords),
+    nth0(0, ToCoords, ToRow).
 
 get_displace_to_col(Displace, ToCol) :-
-    nth0(3, Displace, ToCol).
+    nth0(1, Displace, ToCoords),
+    nth0(1, ToCoords, ToCol).
 
 % Move:
 % ring_displace -> [-1, -1, pos, pos] if placing a ball
@@ -166,7 +170,7 @@ replace_row(GameState, RowIndex, NewRow, NewGameState) :-
     replace(Board, RowIndex, NewRow, NewBoard),
     replace_board(GameState, NewBoard, NewGameState).
 
-replace_stack(GameState, RowIndex, ColIndex, NewStack, NewGameState) :-
+replace_stack(GameState, [RowIndex, ColIndex], NewStack, NewGameState) :-
     get_row(GameState, RowIndex, Row),
     replace(Row, ColIndex, NewStack, NewRow),
     replace_row(GameState, RowIndex, NewRow, NewGameState).

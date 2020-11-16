@@ -17,9 +17,12 @@ game_loop(GameState, Player) :-
     display_game(GameState, Player),
     repeat,
     read_move(GameState, Player, Move),
-    write(Move),
     % new_move([-1, -1, 3, 1], [4, 0, 3, 1], [], Player, Move),
-    move(GameState, Move, NewGameState),
+    ite(
+        move(GameState, Move, NewGameState),
+        true,
+        (write('Impossible move!\n'), fail)
+    ),
     next_player(Player, NextPlayer),
     game_loop(NewGameState, NextPlayer).
 
