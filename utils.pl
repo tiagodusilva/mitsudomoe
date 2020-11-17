@@ -96,3 +96,7 @@ get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRo
     ),
     normalize_delta(RowAdj, DeltaRow),
     normalize_delta(ColAdj, DeltaCol).
+
+nth0_from_end(Index, List, Elem) :-
+    reverse(List, RevList),
+    nth0(Index, RevList, Elem).

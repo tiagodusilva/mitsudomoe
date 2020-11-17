@@ -109,6 +109,27 @@ get_top_elem(GameState, Coords, TopElem) :-
     get_stack(GameState, Coords, Stack),
     last(Stack, TopElem).
 
+get_top_elem_initial_cells(GameState, white, CoordList) :-
+    get_board(GameState, Board),
+    length(Board, NumRows),
+    BottomRow is NumRows - 1,
+    BeforeBottomRow is NumRows - 2,
+    get_top_elem(GameState, [BeforeBottomRow, 0], Elem1),
+    get_top_elem(GameState, [BottomRow, 0], Elem2),
+    get_top_elem(GameState, [BottomRow, 1], Elem3),
+    CoordList = [Elem1, Elem2, Elem3].
+
+get_top_elem_initial_cells(GameState, black, CoordList) :-
+    get_board(GameState, Board),
+    nth0(0, Board, FirstRow),
+    length(FirstRow, NumCols),
+    LastCol is NumCols - 1,
+    BeforeLastCol is NumCols - 2,
+    get_top_elem(GameState, [0, BeforeLastCol], Elem1),
+    get_top_elem(GameState, [0, LastCol], Elem2),
+    get_top_elem(GameState, [1, LastCol], Elem3),
+    CoordList = [Elem1, Elem2, Elem3].
+
 
 % ------------------------
 %     MOVE DEFINITION
@@ -180,3 +201,4 @@ replace_remaining_rings(GameState, white, NewRemainingRings, NewGameState) :-
 
 replace_remaining_rings(GameState, black, NewRemainingRings, NewGameState) :-
     replace(GameState, 2, NewRemainingRings, NewGameState).
+

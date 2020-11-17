@@ -25,16 +25,25 @@ game_loop(GameState, Player) :-
         (write('Impossible move!\n'), fail)
     ),
     next_player(Player, NextPlayer),
-    game_loop(NewGameState, NextPlayer).
+    game_over(NewGameState, Player, Winner),
+    ite(
+        Winner == none,
+        game_loop(NewGameState, NextPlayer),
+        ite(
+            Winner == white,
+            write('White won!\n'),
+            write('Black won!\n')
+        )
+    ).
 
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [2, 4], [2, 4]],
-            [ [],     [],     [],  [1],     [2, 4]],
+            [ [],     [],     [],  [1, 3], [1]],
+            [ [],     [],     [],  [1, 3],     [1, 3]],
             [ [],     [],     [1, 2, 4],  [],     []],
-            [ [1, 3], [1, 3],     [],  [],     []],
-            [ [1, 3], [1], [],  [2],     []]
+            [ [1, 3], [1],     [],  [],     []],
+            [ [1,4 ], [1,4], [],  [2],     []]
         ],
         5, % Unplayed white rings
         5, % Unplayed black rings
@@ -45,3 +54,41 @@ play_test(Test) :-
     test_game(GameState),
     Player = white,
     read_move(GameState, Player, Test).
+
+%To check after each player finished their turn (Return Winner(white/black/none))
+game_over(GameState, Player, Winner) :-
+    ite(
+        \+ check_enemy_cells(GameState, Player),
+        ite(
+            check_own_cells(GameState, Player),
+            next_player(Player, Winner),
+            Winner = none
+        ),
+        Winner = Player
+    ).
+
+%Checks for player colored balls on the enemy's starting cells
+check_enemy_cells(GameState, Player) :-
+    next_player(Player, Enemy),
+    get_top_elem_initial_cells(GameState, Enemy, Cells),
+    nth0(0, Cells, Elem1),
+    nth0(1, Cells, Elem2),
+    nth0(2, Cells, Elem3),
+    owns_ball(Player, Elem1),
+    owns_ball(Player, Elem2),
+    owns_ball(Player, Elem3).
+
+
+%Checks for any balls on the player initial houses
+check_own_cells(GameState, Player) :-
+    get_top_elem_initial_cells(GameState, Player, Cells),
+    nth0(0, Cells, Elem1),
+    nth0(1, Cells, Elem2),
+    nth0(2, Cells, Elem3),
+    is_ball(Elem1),
+    is_ball(Elem2),
+    is_ball(Elem3).
+
+
+    
+
