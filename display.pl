@@ -105,6 +105,18 @@ print_legend :-
     nl,
     nl.
 
+
+print_mode_select :-
+    write('1 - Human vs Human'),
+    nl,
+    write('2 - Computer vs Human (Computer First)'),
+    nl,
+    write('3 - Human vs Computer (Human First)'),
+    nl,
+    write('4 - Computer vs Computer'),
+    nl,
+    write('Choose mode:').
+
 print_player(white) :-
     print_line_padding,
     write('WHITE\'S TURN:'), nl.
