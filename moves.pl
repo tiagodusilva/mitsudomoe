@@ -134,3 +134,14 @@ relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState
     displace_ball(GameState, Player, Relocation, NextGameState),
     relocate_balls(NextGameState, Player, BallRelocations, FinalGameState).
 
+
+
+
+% STARTED AI STUFFS
+
+
+% get_exposed_rings(GameState, Player, ExposedRings) :-
+%     get_exposed_rings(GameState, Player, [], ExposedRings).
+
+% get_exposed_rings(Board, Player, ExposedRings, ExposedFinalRings).
+

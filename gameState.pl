@@ -131,6 +131,30 @@ get_top_elem_initial_cells(GameState, black, CoordList) :-
     CoordList = [Elem1, Elem2, Elem3].
 
 
+get_stacks_if(GameState, PredicateList, StackCoords) :-
+    get_board(GameState, Board),
+    get_stacks_if_board(Board, PredicateList, [0, 0], [], StackCoords).
+
+get_stacks_if_board([], _, _, StackCoords, StackCoords).
+get_stacks_if_board([Row | Board], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
+    get_stacks_if_row(Row, PredicateList, [RowIndex, ColIndex], StackCoords, NextStackCoords),
+    NextRow is RowIndex + 1,
+    get_stacks_if_board(Board, PredicateList, [NextRow, ColIndex], NextStackCoords, FinalStackCoords).
+
+
+get_stacks_if_row([], _, _, StackCoords, StackCoords).
+get_stacks_if_row([Stack | Row], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
+    append(PredicateList, [Stack], FilledPredicate),
+    T =.. FilledPredicate,
+    ite(
+        T,
+        append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
+        NextStackCoords = StackCoords
+    ),
+    NextCol is ColIndex + 1,
+    get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], NextStackCoords, FinalStackCoords).
+
+
 % ------------------------
 %     MOVE DEFINITION
 % ------------------------

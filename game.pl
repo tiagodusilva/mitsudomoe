@@ -36,24 +36,36 @@ game_loop(GameState, Player) :-
         )
     ).
 
+
+% STACK CONTENTS
+% 1 : White Ring
+% 2 : Black Ring
+% 3 : White Ball
+% 4 : Black Ball
+
 test_game(GameState) :-
     GameState = [
         [  % Game board
             [ [],     [],     [],  [1, 3], [1]],
-            [ [],     [],     [],  [1, 3],     [1, 3]],
+            [ [],     [1],     [],  [1, 3],     [1, 3]],
             [ [],     [],     [1, 2, 4],  [],     []],
             [ [1, 3], [1],     [],  [],     []],
-            [ [1,4 ], [1,4], [],  [2],     []]
+            [ [1, 4], [1,4], [],  [2],     []]
         ],
         5, % Unplayed white rings
         5, % Unplayed black rings
         3  % Shown Stack Size
     ].
 
+placeable(Player, Stack) :-
+    last(Stack, Last),
+    owns_ring(Player, Last).
+
 play_test(Test) :-
     test_game(GameState),
     Player = white,
-    read_move(GameState, Player, Test).
+    PredList = [placeable, Player],
+    get_stacks_if(GameState, PredList, Test).
 
 %To check after each player finished their turn (Return Winner(white/black/none))
 game_over(GameState, Player, Winner) :-
