@@ -28,6 +28,22 @@ append_zeros(Input, Number, Result) :-
     append_zeros(ResultAux2, NumberNext, Result).
 
 
+combinatorial_zip([], _, []).
+combinatorial_zip(_, [], []).
+combinatorial_zip([Head1 | List1], [Head2 | List2], Result) :-
+    combinatorial_zip([Head1 | List1], [Head2 | List2], [], Result).
+
+combinatorial_zip([], _, Result, Result).
+combinatorial_zip([Head | List1], List2, Tmp, Result) :-
+    combine_element(Head, List2, Tmp, NewTmp),
+    combinatorial_zip(List1, List2, NewTmp, Result). 
+
+combine_element(_, [], Result, Result).
+combine_element(Element, [Element | List], Tmp, Result) :-
+    combine_element(Element, List, Tmp, Result).
+combine_element(Element, [Head | List], Tmp, Result) :-
+    append(Tmp, [[Element, Head]], NewTmp),
+    combine_element(Element, List, NewTmp, Result).
 
 % ------------------------
 %   POSITION MANIPULATION

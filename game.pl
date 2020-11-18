@@ -62,10 +62,14 @@ placeable(Player, Stack) :-
     owns_ring(Player, Last).
 
 play_test(Test) :-
-    test_game(GameState),
-    Player = white,
-    PredList = [placeable, Player],
-    get_stacks_if(GameState, PredList, Test).
+    initial(GameState),
+    valid_moves(GameState, ListOfMoves),
+    write(ListOfMoves),
+    write('\nLenght: '),
+    length(ListOfMoves, Length),
+    write(Length).
+
+
 
 %To check after each player finished their turn (Return Winner(white/black/none))
 game_over(GameState, Player, Winner) :-

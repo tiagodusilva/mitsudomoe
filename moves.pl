@@ -1,8 +1,5 @@
 :- use_module(library(lists)).
 
-% valid_moves(GameState, Player, ListOfMoves) :-
-%     fail.    
-
 reduce_remaining_rings(GameState, Player, NewGameState) :-
     get_remaining_player_rings(GameState, Player, Rings),
     Rings > 0,
@@ -138,10 +135,45 @@ relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState
 
 
 % STARTED AI STUFFS
+% new_move(RingDisplace, BallDisplace, BallRelocations, Player, [RingDisplace, BallDisplace, BallRelocations, Player]).
+
+lambda_can_ball_be_placed(Player, Stack) :-
+    can_ball_be_placed(Stack, Player).
+get_exposed_rings(GameState, Player, ExposedRings) :-
+    get_stacks_if(GameState, [lambda_can_ball_be_placed, Player], ExposedRings).
 
 
-% get_exposed_rings(GameState, Player, ExposedRings) :-
-%     get_exposed_rings(GameState, Player, [], ExposedRings).
+lambda_can_ring_be_placed(Stack) :-
+    can_ring_be_placed(Stack).
+get_ring_placement_locations(GameState, PossibleRingPositions) :-
+    get_stacks_if(GameState, [lambda_can_ring_be_placed], PossibleRingPositions).
 
-% get_exposed_rings(Board, Player, ExposedRings, ExposedFinalRings).
+
+lambda_coords_to_ring_displacement(Old, [[-1, -1], Old]).
+valid_moves_add_ring_placement(GameState, Player, CurList, RingMoves) :-
+    get_remaining_player_rings(GameState, Player, RemaingRings),
+    it(RemaingRings =< 0, fail),
+    get_ring_placement_locations(GameState, PossibleRingPositions),
+    maplist(lambda_coords_to_ring_displacement, PossibleRingPositions, PossibleRingDisplacement),
+    append(CurList, PossibleRingDisplacement, RingMoves).
+
+
+valid_moves_add_ring_dislocation(GameState, Player, CurList, RingMoves) :-
+    get_exposed_rings(GameState, Player, ExposedRings),
+    get_ring_placement_locations(GameState, PosibleRingPositions),
+    combinatorial_zip(ExposedRings, PosibleRingPositions, RingDisplacements),
+    append(CurList, RingDisplacements, RingMoves).
+
+
+
+% TODO: Valid moves is for current or next player?
+valid_moves(GameState, ListOfMoves) :-
+    Player = white,
+    valid_moves_add_ring_placement(GameState, Player, [], PartialRingDisplacements),
+    valid_moves_add_ring_dislocation(GameState, Player, PartialRingDisplacements, RingDisplacements),
+    % RingDisplacements contains all possible ring phase moves, aka placing or moving a ring
+    
+    write(RingDisplacements),
+    write('\n').
+
 
