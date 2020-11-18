@@ -38,6 +38,10 @@ read_move(GameState, Player, Move) :-
     new_move(RingDisplace, BallDisplace, FinalDisplacements, Player, Move).
 
 
+read_mode(Mode) :-
+    print_mode_select,
+    read_number(Mode).
+
 letter_to_col('a', 0).
 letter_to_col('b', 1).
 letter_to_col('c', 2).

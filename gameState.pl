@@ -109,7 +109,7 @@ get_top_elem(GameState, Coords, TopElem) :-
     get_stack(GameState, Coords, Stack),
     last(Stack, TopElem).
 
-get_top_elem_initial_cells(GameState, white, CoordList) :-
+get_top_elem_initial_cells(GameState, white, ElemList) :-
     get_board(GameState, Board),
     length(Board, NumRows),
     BottomRow is NumRows - 1,
@@ -117,9 +117,9 @@ get_top_elem_initial_cells(GameState, white, CoordList) :-
     get_top_elem(GameState, [BeforeBottomRow, 0], Elem1),
     get_top_elem(GameState, [BottomRow, 0], Elem2),
     get_top_elem(GameState, [BottomRow, 1], Elem3),
-    CoordList = [Elem1, Elem2, Elem3].
+    ElemList = [Elem1, Elem2, Elem3].
 
-get_top_elem_initial_cells(GameState, black, CoordList) :-
+get_top_elem_initial_cells(GameState, black, ElemList) :-
     get_board(GameState, Board),
     nth0(0, Board, FirstRow),
     length(FirstRow, NumCols),
@@ -128,7 +128,22 @@ get_top_elem_initial_cells(GameState, black, CoordList) :-
     get_top_elem(GameState, [0, BeforeLastCol], Elem1),
     get_top_elem(GameState, [0, LastCol], Elem2),
     get_top_elem(GameState, [1, LastCol], Elem3),
-    CoordList = [Elem1, Elem2, Elem3].
+    ElemList = [Elem1, Elem2, Elem3].
+
+get_initial_cells(GameState, black, CoordList) :-
+    get_board(GameState, Board),
+    nth0(0, Board, FirstRow),
+    length(FirstRow, NumCols),
+    LastCol is NumCols - 1,
+    BeforeLastCol is NumCols - 2,
+    CoordList = [[0, BeforeLastCol], [0, LastCol], [1, LastCol]].
+
+get_initial_cells(GameState, white, CoordList) :-
+    get_board(GameState, Board),
+    length(Board, NumRows),
+    BottomRow is NumRows - 1,
+    BeforeBottomRow is NumRows - 2,
+    CoordList = [[BeforeBottomRow, 0], [BottomRow, 0], [BottomRow, 1]].
 
 
 get_stacks_if(GameState, PredicateList, StackCoords) :-
@@ -154,6 +169,9 @@ get_stacks_if_row([Stack | Row], PredicateList, [RowIndex, ColIndex], StackCoord
     NextCol is ColIndex + 1,
     get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], NextStackCoords, FinalStackCoords).
 
+is_ball_from_player_on_top_of_stack(Player, Stack) :-
+    last(Stack, TopElem),
+    owns_ball(Player, TopElem).
 
 % ------------------------
 %     MOVE DEFINITION

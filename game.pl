@@ -5,19 +5,43 @@
 :- ensure_loaded('moves.pl').
 :- ensure_loaded('input.pl').
 
+:- use_module(library(system)).
+
+
+%%%GAME MODE
+% 1 - H-H
+% 2 - C-H
+% 3 - H-C
+% 4 - C-C 
+mode(1, h-h).
+mode(2, c-h).
+mode(3, h-c).
+mode(4, c-c).
+
 play :-
     % initial(GameState),
     test_game(GameState),
     % print_title,
     % print_legend,
-    Player = white,
-    game_loop(GameState, Player).
-   
+    read_mode(ModeNumber),
+    mode(ModeNumber, Mode),
+    actual_game_loop(GameState, white, Mode).
 
-game_loop(GameState, Player) :-
-    display_game(GameState, Player),
+
+game_loop(GameState, Player, h-c) :-
+    actual_game_loop(GameState, Player, c-h).
+game_loop(GameState, Player, c-h) :-
+    actual_game_loop(GameState, Player, h-c).
+game_loop(GameState, Player, Mode) :-
+    actual_game_loop(GameState, Player, Mode).
+
+
+actual_game_loop(GameState, Player, Mode) :-
+    % display_game(GameState, Player),
+    value(GameState, Player, Value),
+    write(Value),
     repeat,
-    read_move(GameState, Player, Move),
+    pick_move(GameState, Player, Mode, Move),
     % new_move([[4, 1], [1, 3]], [[4, 0], [1, 3]], [[[2, 2], [4, 3]]], Player, Move),
     ite(
         move(GameState, Move, NewGameState),
@@ -25,10 +49,14 @@ game_loop(GameState, Player) :-
         (write('Impossible move!\n'), fail)
     ),
     next_player(Player, NextPlayer),
+    it(
+        Mode == c-c,
+        sleep(2)
+    ),
     game_over(NewGameState, Player, Winner),
     ite(
         Winner == none,
-        game_loop(NewGameState, NextPlayer),
+        game_loop(NewGameState, NextPlayer, Mode),
         ite(
             Winner == white,
             write('White won!\n'),
@@ -105,6 +133,15 @@ check_own_cells(GameState, Player) :-
     is_ball(Elem2),
     is_ball(Elem3).
 
+call_game_loop(GameState, Player, 1) :-
+    game_loop_hh(GameState, Player).
 
-    
 
+pick_move(GameState, Player, h-h, Move) :-
+    read_move(GameState, Player, Move).
+pick_move(GameState, Player, h-c, Move) :-
+    read_move(GameState, Player, Move).
+pick_move(GameState, Player, c-c, Move) :-
+    choose_move(GameState, Player, Level, Move).
+pick_move(GameState, Player, c-h, Move) :-
+    choose_move(GameState, Player, Level, Move).

@@ -132,6 +132,23 @@ relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState
     relocate_balls(NextGameState, Player, BallRelocations, FinalGameState).
 
 
+value(GameState, Player, Value) :-
+    get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
+    ball_distance_score(GameState, Player, StackCoords, Value).
+
+
+ball_distance_score(GameState, Player, BallCoords, Score) :-
+    get_initial_cells(GameState, Player, CoordList),
+    nth0(0, BallCoords, Ball1),
+    nth0(1, BallCoords, Ball2),
+    nth0(2, BallCoords, Ball3),
+    maplist(dist, [Ball1, Ball1, Ball1], CoordList, Dists1),
+    maplist(dist, [Ball2, Ball2, Ball2], CoordList, Dists2),
+    maplist(dist, [Ball3, Ball3, Ball3], CoordList, Dists3),
+    avg(Dists1, Avg1),
+    avg(Dists2, Avg2),
+    avg(Dists3, Avg3),
+    sumlist([Avg1, Avg2, Avg3], Score).
 
 
 % STARTED AI STUFFS

@@ -116,3 +116,11 @@ get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRo
 nth0_from_end(Index, List, Elem) :-
     reverse(List, RevList),
     nth0(Index, RevList, Elem).
+
+dist([X1, Y1], [X2, Y2], Result) :-
+    Result is sqrt(exp(X1 - X2, 2) + exp(Y1 - Y2, 2)).
+
+avg(List, Result) :-
+    length(List, Len),
+    sumlist(List, Sum),
+    Result = Sum / Len.
