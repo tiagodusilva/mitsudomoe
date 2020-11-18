@@ -5,6 +5,8 @@
 :- ensure_loaded('moves.pl').
 :- ensure_loaded('input.pl').
 
+:- use_module(library(system)).
+
 
 %%%GAME MODE
 % 1 - H-H
@@ -47,6 +49,10 @@ actual_game_loop(GameState, Player, Mode) :-
         (write('Impossible move!\n'), fail)
     ),
     next_player(Player, NextPlayer),
+    it(
+        Mode == c-c,
+        sleep(2)
+    ),
     game_over(NewGameState, Player, Winner),
     ite(
         Winner == none,
