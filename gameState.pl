@@ -136,7 +136,7 @@ get_stacks_if(GameState, PredicateList, StackCoords) :-
     get_stacks_if_board(Board, PredicateList, [0, 0], [], StackCoords).
 
 get_stacks_if_board([], _, _, StackCoords, StackCoords).
-get_stacks_if_board([Row | Board], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-   ç
+get_stacks_if_board([Row | Board], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
     get_stacks_if_row(Row, PredicateList, [RowIndex, ColIndex], StackCoords, NextStackCoords),
     NextRow is RowIndex + 1,
     get_stacks_if_board(Board, PredicateList, [NextRow, ColIndex], NextStackCoords, FinalStackCoords).
