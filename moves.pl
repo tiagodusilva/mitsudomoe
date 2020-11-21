@@ -1,16 +1,22 @@
 :- use_module(library(lists)).
 
+% reduce_remaining_rings(+GameState, +Player, -NewGameState)
+% Decreases the amount of rings outside of play of Player after placement on the board
 reduce_remaining_rings(GameState, Player, NewGameState) :-
     get_remaining_player_rings(GameState, Player, Rings),
     Rings > 0,
     NewRings is Rings - 1,
     replace_remaining_rings(GameState, Player, NewRings, NewGameState).
 
+% can_ring_be_placed(+Stack)
+% Checks if a ring can be placed on top of Stack(checks if it is empty or has a ring on top)
 can_ring_be_placed([]).
 can_ring_be_placed(Stack) :-
     last(Stack, LastElem),
     is_ring(LastElem).
 
+% can_ball_be_placed(+Stack, +Player)
+% Checks if a ball can be placed on top of Stack (checks for the excistance on a ring of the same player)
 can_ball_be_placed(Stack, Player) :-
     last(Stack, LastElem),
     owns_ring(Player, LastElem).
@@ -18,6 +24,8 @@ can_ball_be_placed(Stack, Player) :-
 % ------------------------
 %      RING MOVEMENT
 % ------------------------
+% place_ring(+GameState, +Player, +Coords, -NewGameState)
+% Places a Ring from Player at Cords
 place_ring(GameState, Player, Coords, NewGameState) :-
     get_stack(GameState, Coords, Stack),
     can_ring_be_placed(Stack),
@@ -25,6 +33,8 @@ place_ring(GameState, Player, Coords, NewGameState) :-
     append(Stack, [RingCode], NewStack),
     replace_stack(GameState, Coords, NewStack, NewGameState).
 
+% place_new_ring(+GameState, +Player, +Coords, -NewGameState)
+% Places a new Ring from Player at Cords
 place_new_ring(GameState, Player, Coords, NewGameState) :-
     % Does the player still have rings to place?
     get_remaining_player_rings(GameState, Player, Rings),
@@ -32,6 +42,8 @@ place_new_ring(GameState, Player, Coords, NewGameState) :-
     place_ring(GameState, Player, Coords, PlacedRingGameState),
     reduce_remaining_rings(PlacedRingGameState, Player, NewGameState).
 
+% remove_ring(+GameState, +Player, +Coords, -NewGameState)
+% Removes a  Ring from Player at Cords
 remove_ring(GameState, Player, Coords, NewGameState) :-
     get_stack(GameState, Coords, Stack),
     owns_ring(Player, RingCode),
@@ -39,6 +51,8 @@ remove_ring(GameState, Player, Coords, NewGameState) :-
     append(PoppedStack, [RingCode], Stack),
     replace_stack(GameState, Coords, PoppedStack, NewGameState).
 
+% move_ring(+GameState, +Player, +Displace, -NewGameState)
+% Moves a ring from a cell to another
 move_ring(GameState, Player, [FromCoords, ToCoords], NewGameState) :-
     % Cannot move to the same place
     is_pos_different(FromCoords, ToCoords),
@@ -50,12 +64,16 @@ move_ring(GameState, Player, [FromCoords, ToCoords], NewGameState) :-
 % ------------------------
 %      BALL MOVEMENT
 % ------------------------
+% can_vault(+GameState, +Player, +Displace, -BallsToDisplace)~
+% Checks if a ball can vault in a certain direction
 can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     % Already fails if not a valid trajectory in get_direction
     get_direction([FromCoords, ToCoords], Delta),
     add_coords(FromCoords, Delta, NextCoords),
     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToDisplace).
 
+% can_vault_aux(+GameState, +Player, +Displace, +Delta, +BallsDisplaced, -BallsToDisplace)
+% Auxiliary function of can_vault/4 that return the ballstodisplace after a vault if it is a possible one
 % Can safely ignore the last stack (verification is done previously)
 can_vault_aux(_, _, [Coords, Coords], _, BallsDisplaced, BallsDisplaced).
 can_vault_aux(GameState, Player, [FromCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace) :-
@@ -71,7 +89,8 @@ can_vault_aux(GameState, Player, [FromCoords, ToCoords], Delta, BallsDisplaced, 
         )
     ).
 
-
+% can_move_ball(+GameState, +Player, +Displace, -BallsToDisplace)
+% Checks if we can move a ball to a specified location
 can_move_ball(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     % Verify it is not the same position
     is_pos_different(FromCoords, ToCoords),
@@ -89,12 +108,16 @@ can_move_ball(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
         can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace)
     ).
 
+% remove_ball(+GameState, +Player, +Coords, -NewGameState)
+% Removes a ball from Coords
 remove_ball(GameState, Player, Coords, NewGameState) :-
     get_stack(GameState, Coords, Stack),
     owns_ball(Player, BallCode),
     append(PoppedStack, [BallCode], Stack),
     replace_stack(GameState, Coords, PoppedStack, NewGameState).
 
+% place_ball(+GameState, +Player, +Coords, -NewGameState)~
+% Places a new ball at Coords
 place_ball(GameState, Player, Coords, NewGameState) :-
     get_stack(GameState, Coords, Stack),
     can_ball_be_placed(Stack, Player),
@@ -102,19 +125,23 @@ place_ball(GameState, Player, Coords, NewGameState) :-
     append(Stack, [BallCode], NewStack),
     replace_stack(GameState, Coords, NewStack, NewGameState).
 
-% % To be used for relocating enemy balls because it has less restrictions on movement
+% displace_ball(+GameState, +Player, +Displace, -NewGameState)
+% To be used for relocating enemy balls because it has less restrictions on movement
 displace_ball(GameState, Player, [FromCoords, ToCoords], NewGameState) :-
     is_pos_different(FromCoords, ToCoords),
     remove_ball(GameState, Player, FromCoords, RemovedGameState),
     place_ball(RemovedGameState, Player, ToCoords, NewGameState).
 
-% % To be used when moving your own ball as we must consider vaulting
+% move_ball(+GameState, +Player, +Displace, -NewGameState, -BallsToDisplace)
+% To be used when moving your own ball as we must consider vaulting
 move_ball(GameState, Player, Displace, NewGameState, BallsToDisplace) :-
     can_move_ball(GameState, Player, Displace, BallsToDisplace),
     displace_ball(GameState, Player, Displace, NewGameState).
 
-
+% move(+GameState, +Move, -NewGameState)
+% Makes a move Move and return the new GameState
 move(GameState, Move, NewGameState) :-
+    %Split move into components
     new_move([RingFromCoords, RingToCoords], BallDisplace, BallRelocations, Player, Move),
     ite(
         is_negative_coords(RingFromCoords),
@@ -122,21 +149,26 @@ move(GameState, Move, NewGameState) :-
         place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState)
     ),
     move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, _),
+    %Relocate balls after a vault
     next_player(Player, Enemy),
     relocate_balls(MovedBallGameState, Enemy, BallRelocations, NewGameState).
 
-
+% relocate_balls(+GameState, +Player, +BallRelocations, -FinalGameState)
+% Relocates each ball displaced by a vault
 relocate_balls(GameState, _, [], GameState).
 relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState) :-
     displace_ball(GameState, Player, Relocation, NextGameState),
     relocate_balls(NextGameState, Player, BallRelocations, FinalGameState).
 
-
+% value(+GameState, +Player, -Value)
+% Return a value for the board
+% At the moment only takes into account the distance of the player's balls to the final cells
 value(GameState, Player, Value) :-
     get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
     ball_distance_score(GameState, Player, StackCoords, Value).
 
-
+% ball_distance_score(+GameState, +Player, +BallCoords, -Score)
+% Returns the average of the distane of each ball to each final spot
 ball_distance_score(GameState, Player, BallCoords, Score) :-
     get_initial_cells(GameState, Player, CoordList),
     nth0(0, BallCoords, Ball1),

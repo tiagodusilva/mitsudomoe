@@ -49,6 +49,7 @@ actual_game_loop(GameState, Player, Mode) :-
         (write('Impossible move!\n'), fail)
     ),
     next_player(Player, NextPlayer),
+    %Used to check the moves of the computer
     it(
         Mode == c-c,
         sleep(2)
@@ -85,9 +86,6 @@ test_game(GameState) :-
         3  % Shown Stack Size
     ].
 
-placeable(Player, Stack) :-
-    last(Stack, Last),
-    owns_ring(Player, Last).
 
 play_test(Test) :-
     initial(GameState),
@@ -132,10 +130,6 @@ check_own_cells(GameState, Player) :-
     is_ball(Elem1),
     is_ball(Elem2),
     is_ball(Elem3).
-
-call_game_loop(GameState, Player, 1) :-
-    game_loop_hh(GameState, Player).
-
 
 pick_move(GameState, Player, h-h, Move) :-
     read_move(GameState, Player, Move).

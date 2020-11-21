@@ -69,7 +69,7 @@ letter_to_col('x', 23).
 letter_to_col('y', 24).
 letter_to_col('z', 25).
 
-
+% Displays custom Message and reads a pair of coordinates
 read_coord_pair(Message, Coords) :-
     write(Message),
     write('Please insert row [0 ~ 4] '),
@@ -80,13 +80,15 @@ read_coord_pair(Message, Coords) :-
     number(Col),
     Coords = [Row, Col].
 
-
+% Displays a costum message and reads a displacement(from/to)
 read_displace(Message, Displace) :-
     write(Message),
     read_coord_pair('Which piece would you like to move?\n', FromCoords),
     read_coord_pair('Where would you like to move it to?\n', ToCoords),
     new_displace(FromCoords, ToCoords, Displace).
 
+%TODO change length comparation
+%Reads the displacements after a vault
 read_displacements(_, _, [], Displacements, Displacements).
 read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDisplacements) :-
     read_displace('DISPLACE ENEMY BALLS\n', Displace),

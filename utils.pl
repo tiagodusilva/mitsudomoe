@@ -1,12 +1,15 @@
 :- use_module(library(lists)).
 
+% If then else
 ite(I, T, _) :-
     I, !, T.
 ite(_, _, E) :-
     E.
 
+% If then
 it(I, T) :- ite(I, T, true).
 
+% Clones a list
 clone([],[]).
 clone([H|T],[H|Z]):- clone(T,Z).
 
@@ -17,15 +20,6 @@ clone([H|T],[H|Z]):- clone(T,Z).
 replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
-
-
-append_zeros(Input, 0, Result):- clone(Input, Result).
-append_zeros(Input, Number, Result) :- 
-    reverse(Input, Input1),
-    ResultAux = [0|Input1],
-    reverse(ResultAux, ResultAux2),
-    NumberNext is Number - 1,
-    append_zeros(ResultAux2, NumberNext, Result).
 
 
 combinatorial_zip([], _, []).
@@ -67,6 +61,7 @@ is_pos_different([RowIndexA, ColIndexA], [RowIndexB, ColIndexB]) :-
         ColIndexA =:= ColIndexB
     ).
 
+% Adjacent is vertical horizontal or diagonal
 is_adjacent([FromCoords, ToCoords]) :- is_adjacent(FromCoords, ToCoords).
 is_adjacent([FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]) :-
     RowAdj is abs(FromRowIndex - ToRowIndex),
@@ -90,6 +85,7 @@ normalize_delta(Value, Delta) :-
         )
     ).
 
+% Returns a unitary "vector" given two cells
 get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRow, DeltaCol]) :-
     RowAdj is (ToRowIndex - FromRowIndex),
     ColAdj is (ToColIndex - FromColIndex),
@@ -123,4 +119,4 @@ dist([X1, Y1], [X2, Y2], Result) :-
 avg(List, Result) :-
     length(List, Len),
     sumlist(List, Sum),
-    Result = Sum / Len.
+    Result is Sum / Len.
