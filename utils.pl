@@ -14,12 +14,13 @@ clone([],[]).
 clone([H|T],[H|Z]):- clone(T,Z).
 
 
-% https://stackoverflow.com/questions/8519203/prolog-replace-an-element-in-a-list-at-a-specified-index
 % replace(OldList, Index, ElemToReplace, NewList)
-% replace([], _, _, []).
-replace([_|T], 0, X, [X|T]).
-replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
-replace(L, _, _, L).
+replace([_|T], 0, ElemToReplace, [ElemToReplace|T]).
+replace([H|T1], Index, ElemToReplace, [H|T2]) :-
+    Index > -1,
+    NextIndex is Index - 1,
+    replace(T1, NextIndex, ElemToReplace, T2).
+
 
 
 % http://kti.ms.mff.cuni.cz/~bartak/prolog/combinatorics.html
@@ -35,21 +36,34 @@ combinations(N, Input, Output) :-
 combinations_except(N, Input, Except, Output) :-
     findall(X, (comb(N, Input, X), X \= Except), Output).
 
-append_zeros(Input, 0, Result):- clone(Input, Result).
-append_zeros(Input, Number, Result) :- 
-    reverse(Input, Input1),
-    ResultAux = [0|Input1],
-    reverse(ResultAux, ResultAux2),
-    NumberNext is Number - 1,
-    append_zeros(ResultAux2, NumberNext, Result).
+
+
+min_map(List, Predicate, Min) :-
+    min_map(List, Predicate, Min, _, 9999).
+
+min_map([], _, Min, Min, _).
+min_map([H | List], Predicate, Min, CurBest, CurBestVal) :-
+    append(Predicate, [H, Value], PredList),
+    Pred =.. PredList,
+    ite(
+        Pred,
+        true,
+        write('NANI\n')
+    ),
+    min_map_is_better(H, Value, CurBest, CurBestVal, NextBest, NextBestVal),
+    min_map(List, Predicate, Min, NextBest, NextBestVal).
+
+min_map_is_better(Cur, Value, _, CurBestVal, NextBest, NextBestVal) :-
+    Value < CurBestVal,
+    NextBest = Cur,
+    NextBestVal is Value.
+min_map_is_better(_, _, CurBest, CurBestVal, NextBest, NextBestVal) :-
+    NextBest = CurBest,
+    NextBestVal is CurBestVal.
 
 % ------------------------
 %   POSITION MANIPULATION
 % ------------------------
-
-is_negative_coords([X, Y]) :-
-    X =\= -1,
-    Y =\= -1.
 
 add_coords([X1, Y1], [X2, Y2], Result) :-
     Rx is X1 + X2,

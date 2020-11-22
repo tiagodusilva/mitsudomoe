@@ -64,7 +64,7 @@ owns_ring(white, 1).
 owns_ring(black, 2).
 owns_ball(white, 3).
 owns_ball(black, 4).
-
+    
 is_ring(1).
 is_ring(2).
 is_ball(3).

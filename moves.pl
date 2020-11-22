@@ -141,41 +141,37 @@ move_ball(GameState, Player, Displace, NewGameState, BallsToDisplace) :-
     displace_ball(GameState, Player, Displace, NewGameState).
 
 
-move_ring_phase(GameState, [RingFromCoords, RingToCoords], RingPhaseGameState) :-
-    ite(
-        is_negative_coords(RingFromCoords),
-        move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState),
-        place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState)
-    ).
-    
+move_ring_phase(GameState, Player, [[-1, -1], RingToCoords], RingPhaseGameState) :-
+    place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState).
+move_ring_phase(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState) :-
+    move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState).
+
 
 % TODO: Finish this: Add verification for relocated balls
 move_ball_phase(RingPhaseGameState, Player, BallDisplace, BallRelocations, NewGameState) :-
-    move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, _),
+    move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, BallsToDisplace),
     %Relocate balls after a vault
     next_player(Player, Enemy),
-    relocate_balls(MovedBallGameState, Enemy, BallRelocations, NewGameState).
+    relocate_balls(MovedBallGameState, Enemy, BallsToDisplace, BallRelocations, NewGameState).
 
 % move(+GameState, +Move, -NewGameState)
 % Makes a move Move and return the new GameState
 move(GameState, Move, NewGameState) :-
     new_move(RingDisplace, BallDisplace, BallRelocations, Player, Move),
-    move_ring_phase(GameState, RingDisplace, RingPhaseGameState),
+    move_ring_phase(GameState, Player, RingDisplace, RingPhaseGameState),
+    !,
     move_ball_phase(RingPhaseGameState, Player, BallDisplace, BallRelocations, NewGameState).
 
 % relocate_balls(+GameState, +Player, +BallRelocations, -FinalGameState)
 % Relocates each ball displaced by a vault
 relocate_balls(GameState, _, [], [], GameState).
 relocate_balls(GameState, Player, BallsToDisplace, [Displace | Displacements], NewGameState) :-
-    same_length(BallsToDisplace, NewBallsToDisplace),
-    new_displace(FromCoords, _, Displace),
+    same_length(BallsToDisplace, [Displace | Displacements]),
+    Displace = [FromCoords, _],
     delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
     \+ same_length(BallsToDisplace, NewBallsToDisplace),
-    relocate_ball(GameState, Player, Displace, RelocatedGameState),
-    relocate_balls(RelocatedGameState, Player, Displacements, NewGameState).
-
-relocate_ball(GameState, Player, Relocation, NewGameState) :-
-    displace_ball(GameState, Player, Relocation, NewGameState).
+    displace_ball(GameState, Player, Displace, RelocatedGameState),
+    relocate_balls(RelocatedGameState, Player, NewBallsToDisplace, Displacements, NewGameState).
 
 % value(+GameState, +Player, -Value)
 % Return a value for the board
@@ -187,7 +183,8 @@ value(GameState, Player, Value) :-
 % ball_distance_score(+GameState, +Player, +BallCoords, -Score)
 % Returns the average of the distane of each ball to each final spot
 ball_distance_score(GameState, Player, BallCoords, Score) :-
-    get_initial_cells(GameState, Player, CoordList),
+    next_player(Player, Enemy),
+    get_initial_cells(GameState, Enemy, CoordList),
     nth0(0, BallCoords, Ball1),
     nth0(1, BallCoords, Ball2),
     nth0(2, BallCoords, Ball3),
@@ -232,6 +229,7 @@ valid_moves_add_ring_placement(GameState, Player, CurList, RingMoves) :-
     get_ring_placement_locations(GameState, PossibleRingPositions),
     maplist(lambda_coords_to_ring_displacement, PossibleRingPositions, PossibleRingDisplacement),
     append(CurList, PossibleRingDisplacement, RingMoves).
+valid_moves_add_ring_placement(_, _, CurList, CurList).
 
 
 % Append to a list all coords of rings that can be moved
@@ -252,7 +250,7 @@ valid_moves(GameState, Player, ListOfMoves) :-
     findall(Move,
         (
             member(RingD, RingDisplacements),
-            move_ring_phase(GameState, RingD, RingPhaseGameState),
+            move_ring_phase(GameState, Player, RingD, RingPhaseGameState),
             get_exposed_rings(RingPhaseGameState, Player, ExposedRings),
             member(BallFrom, PlayerBalls),
             member(BallTo, ExposedRings),

@@ -6,6 +6,7 @@
 :- ensure_loaded('input.pl').
 
 :- use_module(library(system)).
+:- use_module(library(random)).
 
 
 %%%GAME MODE
@@ -19,10 +20,9 @@ mode(3, h-c).
 mode(4, c-c).
 
 play :-
-    % initial(GameState),
-    test_game(GameState),
-    % print_title,
-    % print_legend,
+    initial(GameState),
+    print_title,
+    print_legend,
     read_mode(ModeNumber),
     mode(ModeNumber, Mode),
     actual_game_loop(GameState, white, Mode).
@@ -37,33 +37,38 @@ game_loop(GameState, Player, Mode) :-
 
 
 actual_game_loop(GameState, Player, Mode) :-
-    % display_game(GameState, Player),
-    value(GameState, Player, Value),
-    write(Value),
+    display_game(GameState, Player),
     repeat,
     pick_move(GameState, Player, Mode, Move),
     % new_move([[4, 1], [1, 3]], [[4, 0], [1, 3]], [[[2, 2], [4, 3]]], Player, Move),
-    ite(
-        move(GameState, Move, NewGameState),
-        true,
-        (write('Impossible move!\n'), fail)
-    ),
+    try_move(GameState, Move, NextGameState),
     next_player(Player, NextPlayer),
     %Used to check the moves of the computer
-    it(
-        Mode == c-c,
-        sleep(2)
-    ),
-    game_over(NewGameState, Player, Winner),
-    ite(
-        Winner == none,
-        game_loop(NewGameState, NextPlayer, Mode),
-        ite(
-            Winner == white,
-            write('White won!\n'),
-            write('Black won!\n')
-        )
-    ).
+    bot_sleep(Mode),
+    game_over(NextGameState, Player, Winner),
+    handle_winner(NextGameState, NextPlayer, Mode, Winner).
+
+
+bot_sleep(c-c) :-
+    true.
+    % sleep(1.5).
+bot_sleep(_).
+
+try_move(GameState, Move, NewGameState) :-
+    move(GameState, Move, NewGameState).
+try_move(_, _, _) :-
+    write('Impossible move!\n'),
+    fail.
+
+
+handle_winner(NextGameState, NextPlayer, Mode, none) :-
+    game_loop(NextGameState, NextPlayer, Mode).
+handle_winner(GameState, NextPlayer, _, white) :-
+    display_game(GameState, NextPlayer),
+    write('White won!\n').
+handle_winner(GameState, NextPlayer, _, black) :-
+    display_game(GameState, NextPlayer),
+    write('Black won!\n').
 
 
 % STACK CONTENTS
@@ -72,30 +77,46 @@ actual_game_loop(GameState, Player, Mode) :-
 % 3 : White Ball
 % 4 : Black Ball
 
+% test_game(GameState) :-
+%     GameState = [
+%         [  % Game board
+%             [ [],     [],     [],  [2, 4], [2]],
+%             [ [],     [],     [],  [2, 4],     [2, 4]],
+%             [ [],     [],     [1, 3],  [],     []],
+%             [ [1, 3], [1],     [],  [],     []],
+%             [ [1], [1, 3], [],  [],     []]
+%         ],
+%         3, % Unplayed white rings
+%         4, % Unplayed black rings
+%         3  % Shown Stack Size
+%     ].
+
+
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [1, 3], [1]],
-            [ [],     [1],     [],  [1, 3],     [1, 3]],
-            [ [],     [],     [1, 2, 4],  [],     []],
-            [ [1, 3], [1],     [],  [],     []],
-            [ [1, 4], [1,4], [],  [2],     []]
+            [ [],     [],     [],  [2, 4], [2]],
+            [ [],     [],     [],  [2, 4],     [2, 4]],
+            [ [],     [],     [],  [],     []],
+            [ [1, 3], [1, 3], [],  [],     []],
+            [ [1], [1, 3], [],  [],     []]
         ],
-        5, % Unplayed white rings
-        5, % Unplayed black rings
+        4, % Unplayed white rings
+        4, % Unplayed black rings
         3  % Shown Stack Size
     ].
 
 
-
 play_test(Test) :-
-    initial(GameState),
-    valid_moves(GameState, white, ListOfMoves),
+    % Move = [[[-1, -1], [3, 1]], [[1, 3], [3, 1]], [[[2, 2], [4, 0]]], black],
+    % move(GameState, Move, _).
+    test_game(GameState),
+    valid_moves(GameState, black, ListOfMoves),
     write(ListOfMoves),
     write('\nLenght: '),
     length(ListOfMoves, Length),
     write(Length),
-    member(Test, ListOfMoves).
+    !, member(Test, ListOfMoves).
 
 
 
@@ -138,6 +159,26 @@ pick_move(GameState, Player, h-h, Move) :-
 pick_move(GameState, Player, h-c, Move) :-
     read_move(GameState, Player, Move).
 pick_move(GameState, Player, c-c, Move) :-
-    choose_move(GameState, Player, Level, Move).
+    choose_move(GameState, Player, smart, Move).
 pick_move(GameState, Player, c-h, Move) :-
-    choose_move(GameState, Player, Level, Move).
+    choose_move(GameState, Player, random, Move).
+
+
+
+choose_move(GameState, Player, random, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    random_member(Move, ListOfMoves).
+
+
+lambda_evaluate_move(GameState, Player, Move, Value) :-
+    move(GameState, Move, NewGameState),
+    value(NewGameState, Player, Value).
+
+choose_move(GameState, Player, smart, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    write('Possible Moves: '),
+    length(ListOfMoves, NumMoves),
+    write(NumMoves),
+    write('\n'),
+    % get best move
+    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).

@@ -6,7 +6,15 @@ read_number(Number) :-
     read(Number),
     number(Number).
 
+
+write_player_move(white) :-
+    write('It\'s white\'s turn:\n').
+write_player_move(black) :-
+    write('It\'s black\'s turn:\n').
+
+
 read_move(GameState, Player, Move) :-
+    write_player_move(Player),
     % Move or Place Ring
     write('Would you like to move or place a new ring? [m / p] \n'),
     read_char(RingType),

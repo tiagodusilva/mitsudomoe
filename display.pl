@@ -57,7 +57,8 @@ code(4, 9679).
 
 display_game(GameState, Player) :-
     nl,
-    print_player(Player),
+    next_player(Player, PreviousPlayer),
+    print_player(PreviousPlayer),
     nl,
     get_board(GameState, Board),
     get_shown_stack_size(GameState, ShownStackSize),
