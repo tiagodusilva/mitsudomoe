@@ -87,17 +87,19 @@ test_game(GameState) :-
     ].
 
 
+
 play_test(Test) :-
     initial(GameState),
-    valid_moves(GameState, ListOfMoves),
+    valid_moves(GameState, white, ListOfMoves),
     write(ListOfMoves),
     write('\nLenght: '),
     length(ListOfMoves, Length),
-    write(Length).
+    write(Length),
+    member(Test, ListOfMoves).
 
 
 
-%To check after each player finished their turn (Return Winner(white/black/none))
+% To check after each player finished their turn (Return Winner(white/black/none))
 game_over(GameState, Player, Winner) :-
     ite(
         \+ check_enemy_cells(GameState, Player),

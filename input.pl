@@ -95,9 +95,7 @@ read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDispl
     % Displace = [[2, 2], [4, 3]],
     new_displace(FromCoords, _, Displace),
     delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
-    length(BallsToDisplace, DisplaceLength),
-    length(NewBallsToDisplace, NewDisplaceLength),
-    DisplaceLength =\= NewDisplaceLength,
+    \+ same_length(BallsToDisplace, NewBallsToDisplace),
     displace_ball(GameState, Player, Displace, NewGameState),
     append(Displacements, [Displace], NewDisplacements),
     read_displacements(NewGameState, Player, NewBallsToDisplace, NewDisplacements, FinalDisplacements).

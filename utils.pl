@@ -22,22 +22,26 @@ replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
 
 
-combinatorial_zip([], _, []).
-combinatorial_zip(_, [], []).
-combinatorial_zip([Head1 | List1], [Head2 | List2], Result) :-
-    combinatorial_zip([Head1 | List1], [Head2 | List2], [], Result).
+% http://kti.ms.mff.cuni.cz/~bartak/prolog/combinatorics.html
+% Generates a combination
+comb(0,_,[]).
+comb(N,[X|T],[X|Comb]):- N>0,N1 is N-1,comb(N1,T,Comb).
+comb(N,[_|T],Comb):- N>0,comb(N,T,Comb).
 
-combinatorial_zip([], _, Result, Result).
-combinatorial_zip([Head | List1], List2, Tmp, Result) :-
-    combine_element(Head, List2, Tmp, NewTmp),
-    combinatorial_zip(List1, List2, NewTmp, Result). 
+% Using findall we can create a list with ALL valid combinations
+combinations(N, Input, Output) :-
+    findall(X, comb(N, Input, X), Output).
 
-combine_element(_, [], Result, Result).
-combine_element(Element, [Element | List], Tmp, Result) :-
-    combine_element(Element, List, Tmp, Result).
-combine_element(Element, [Head | List], Tmp, Result) :-
-    append(Tmp, [[Element, Head]], NewTmp),
-    combine_element(Element, List, NewTmp, Result).
+combinations_except(N, Input, Except, Output) :-
+    findall(X, (comb(N, Input, X), X \= Except), Output).
+
+append_zeros(Input, 0, Result):- clone(Input, Result).
+append_zeros(Input, Number, Result) :- 
+    reverse(Input, Input1),
+    ResultAux = [0|Input1],
+    reverse(ResultAux, ResultAux2),
+    NumberNext is Number - 1,
+    append_zeros(ResultAux2, NumberNext, Result).
 
 % ------------------------
 %   POSITION MANIPULATION
@@ -71,19 +75,15 @@ is_adjacent([FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]) :-
     RowAdj =< 1,
     ColAdj =< 1.
 
+
 % Given a value, set it to -1, 0 or 1
+normalize_delta(0, 0).
 normalize_delta(Value, Delta) :-
-    ite(
-        Value =:= 0,
-        Delta is 0,
-        (
-            ite(
-                Value < 0,
-                Delta is -1,
-                Delta is 1
-            )
-        )
-    ).
+    Value < 0,
+    Delta is -1.
+normalize_delta(_, Delta) :-
+    Delta is 1.
+
 
 % Returns a unitary "vector" given two cells
 get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRow, DeltaCol]) :-

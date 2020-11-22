@@ -1,4 +1,6 @@
 :- use_module(library(lists)).
+:- use_module(library(sets)).
+
 
 % reduce_remaining_rings(+GameState, +Player, -NewGameState)
 % Decreases the amount of rings outside of play of Player after placement on the board
@@ -138,27 +140,42 @@ move_ball(GameState, Player, Displace, NewGameState, BallsToDisplace) :-
     can_move_ball(GameState, Player, Displace, BallsToDisplace),
     displace_ball(GameState, Player, Displace, NewGameState).
 
-% move(+GameState, +Move, -NewGameState)
-% Makes a move Move and return the new GameState
-move(GameState, Move, NewGameState) :-
-    %Split move into components
-    new_move([RingFromCoords, RingToCoords], BallDisplace, BallRelocations, Player, Move),
+
+move_ring_phase(GameState, [RingFromCoords, RingToCoords], RingPhaseGameState) :-
     ite(
         is_negative_coords(RingFromCoords),
         move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState),
         place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState)
-    ),
+    ).
+    
+
+% TODO: Finish this: Add verification for relocated balls
+move_ball_phase(RingPhaseGameState, Player, BallDisplace, BallRelocations, NewGameState) :-
     move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, _),
     %Relocate balls after a vault
     next_player(Player, Enemy),
     relocate_balls(MovedBallGameState, Enemy, BallRelocations, NewGameState).
 
+% move(+GameState, +Move, -NewGameState)
+% Makes a move Move and return the new GameState
+move(GameState, Move, NewGameState) :-
+    new_move(RingDisplace, BallDisplace, BallRelocations, Player, Move),
+    move_ring_phase(GameState, RingDisplace, RingPhaseGameState),
+    move_ball_phase(RingPhaseGameState, Player, BallDisplace, BallRelocations, NewGameState).
+
 % relocate_balls(+GameState, +Player, +BallRelocations, -FinalGameState)
 % Relocates each ball displaced by a vault
-relocate_balls(GameState, _, [], GameState).
-relocate_balls(GameState, Player, [Relocation | BallRelocations], FinalGameState) :-
-    displace_ball(GameState, Player, Relocation, NextGameState),
-    relocate_balls(NextGameState, Player, BallRelocations, FinalGameState).
+relocate_balls(GameState, _, [], [], GameState).
+relocate_balls(GameState, Player, BallsToDisplace, [Displace | Displacements], NewGameState) :-
+    same_length(BallsToDisplace, NewBallsToDisplace),
+    new_displace(FromCoords, _, Displace),
+    delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
+    \+ same_length(BallsToDisplace, NewBallsToDisplace),
+    relocate_ball(GameState, Player, Displace, RelocatedGameState),
+    relocate_balls(RelocatedGameState, Player, Displacements, NewGameState).
+
+relocate_ball(GameState, Player, Relocation, NewGameState) :-
+    displace_ball(GameState, Player, Relocation, NewGameState).
 
 % value(+GameState, +Player, -Value)
 % Return a value for the board
@@ -184,45 +201,102 @@ ball_distance_score(GameState, Player, BallCoords, Score) :-
 
 
 % STARTED AI STUFFS
-% new_move(RingDisplace, BallDisplace, BallRelocations, Player, [RingDisplace, BallDisplace, BallRelocations, Player]).
 
+
+% Returns a list with the coords of all stacks where a certain player's ball can be placed/moved
 lambda_can_ball_be_placed(Player, Stack) :-
     can_ball_be_placed(Stack, Player).
 get_exposed_rings(GameState, Player, ExposedRings) :-
     get_stacks_if(GameState, [lambda_can_ball_be_placed, Player], ExposedRings).
 
 
+% Returns a list with the coords of all stacks where a ring can be placed
 lambda_can_ring_be_placed(Stack) :-
     can_ring_be_placed(Stack).
 get_ring_placement_locations(GameState, PossibleRingPositions) :-
     get_stacks_if(GameState, [lambda_can_ring_be_placed], PossibleRingPositions).
 
 
+lambda_has_player_ball(Player, Stack) :-
+    last(Stack, Last),
+    owns_ball(Player, Last).
+get_player_balls(GameState, Player, Balls) :-
+    get_stacks_if(GameState, [lambda_has_player_ball, Player], Balls).
+
+
+% Append to a list all coords of rings that can be placed
 lambda_coords_to_ring_displacement(Old, [[-1, -1], Old]).
 valid_moves_add_ring_placement(GameState, Player, CurList, RingMoves) :-
-    get_remaining_player_rings(GameState, Player, RemaingRings),
-    it(RemaingRings =< 0, fail),
+    get_remaining_player_rings(GameState, Player, RemainingRings),
+    RemainingRings > 0,
     get_ring_placement_locations(GameState, PossibleRingPositions),
     maplist(lambda_coords_to_ring_displacement, PossibleRingPositions, PossibleRingDisplacement),
     append(CurList, PossibleRingDisplacement, RingMoves).
 
 
+% Append to a list all coords of rings that can be moved
 valid_moves_add_ring_dislocation(GameState, Player, CurList, RingMoves) :-
     get_exposed_rings(GameState, Player, ExposedRings),
     get_ring_placement_locations(GameState, PosibleRingPositions),
-    combinatorial_zip(ExposedRings, PosibleRingPositions, RingDisplacements),
+    findall([X, Y], (member(X, ExposedRings), member(Y, PosibleRingPositions), X\=Y), RingDisplacements),
     append(CurList, RingDisplacements, RingMoves).
 
 
 
-% TODO: Valid moves is for current or next player?
-valid_moves(GameState, ListOfMoves) :-
-    Player = white,
+valid_moves(GameState, Player, ListOfMoves) :-
     valid_moves_add_ring_placement(GameState, Player, [], PartialRingDisplacements),
     valid_moves_add_ring_dislocation(GameState, Player, PartialRingDisplacements, RingDisplacements),
     % RingDisplacements contains all possible ring phase moves, aka placing or moving a ring
-    
-    write(RingDisplacements),
-    write('\n').
+    get_player_balls(GameState, Player, PlayerBalls),
+
+    findall(Move,
+        (
+            member(RingD, RingDisplacements),
+            move_ring_phase(GameState, RingD, RingPhaseGameState),
+            get_exposed_rings(RingPhaseGameState, Player, ExposedRings),
+            member(BallFrom, PlayerBalls),
+            member(BallTo, ExposedRings),
+            can_move_ball(RingPhaseGameState, Player, [BallFrom, BallTo], BallsToDisplace),
+            generate_displacements(RingPhaseGameState, Player, BallsToDisplace, Displacements),
+            new_move(RingD, [BallFrom, BallTo], Displacements, Player, Move)
+        ),
+        ListOfMoves
+    ).
 
 
+% generate_displacements(+RingPhaseGameState, +Player, +BallsToDisplace, -Displacements) :-
+generate_displacements(_, _, [], []).
+generate_displacements(RingPhaseGameState, Player, BallsToDisplace, Displacements) :-
+    next_player(Player, Enemy),
+    get_exposed_rings(RingPhaseGameState, Enemy, EnemyExposedRings),
+    append(EnemyExposedRings, BallsToDisplace, PossibleSpots),
+    generate_outcome(BallsToDisplace, PossibleSpots, Outcome),
+    get_displacements_from_outcome(BallsToDisplace, Outcome, Displacements).
+
+
+generate_outcome(BallsToDisplace, Spots, Outcome) :-
+    length(BallsToDisplace, NumBalls),
+    comb(NumBalls, Spots, Outcome),
+    BallsToDisplace \= Outcome.
+
+
+get_displacements_from_outcome(BallsToDisplace, Outcome, Displacements) :-
+    intersection(BallsToDisplace, Outcome, PriorityBalls),
+    subtract(BallsToDisplace, PriorityBalls, RemainingBalls),
+    subtract(Outcome, PriorityBalls, FreeSpots),
+    outcome_displace_balls(PriorityBalls, FreeSpots, Displacements1, RemainingFreeSpots),
+    append(RemainingFreeSpots, PriorityBalls, RemainingSpots),
+    outcome_displace_balls(RemainingBalls, RemainingSpots, Displacements2, []),
+    append(Displacements1, Displacements2, Displacements).
+
+
+% outcome_displace_balls(+PriotityBalls, +FreeSpots, -Displacements, -RemainingSpots).
+outcome_displace_balls([], FreeSpots, [], FreeSpots).
+outcome_displace_balls([Ball | Balls], [Spot | FreeSpots], [[Ball, Spot] | T], RemainingSpots) :-
+    outcome_displace_balls(Balls, FreeSpots, T, RemainingSpots).
+
+
+% criar lista de todas as pos de rings expostos + pos de bolas para dar relocate
+
+
+% new_move(RingDisplace, BallDisplace, BallRelocations, Player, Move).
