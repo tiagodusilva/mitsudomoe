@@ -50,8 +50,8 @@ actual_game_loop(GameState, Player, Mode) :-
 
 
 bot_sleep(c-c) :-
-    true.
-    % sleep(1.5).
+    % true.
+    sleep(1.5).
 bot_sleep(_).
 
 try_move(GameState, Move, NewGameState) :-
@@ -161,7 +161,7 @@ pick_move(GameState, Player, h-c, Move) :-
 pick_move(GameState, Player, c-c, Move) :-
     choose_move(GameState, Player, smart, Move).
 pick_move(GameState, Player, c-h, Move) :-
-    choose_move(GameState, Player, random, Move).
+    choose_move(GameState, Player, smart, Move).
 
 
 
@@ -172,7 +172,12 @@ choose_move(GameState, Player, random, Move) :-
 
 lambda_evaluate_move(GameState, Player, Move, Value) :-
     move(GameState, Move, NewGameState),
-    value(NewGameState, Player, Value).
+    value(NewGameState, Player, ValuePlayer),
+    next_player(Player, NextPlayer),
+    value(NewGameState, NextPlayer, ValueEnemy),
+    random(-0.5, 0.5, Rand),
+    Value is ValuePlayer + ValueEnemy * 0.5 + Rand.
+    % Value is ValuePlayer + ValueEnemy * 0.5.
 
 choose_move(GameState, Player, smart, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
@@ -182,3 +187,14 @@ choose_move(GameState, Player, smart, Move) :-
     write('\n'),
     % get best move
     min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
+
+% choose_move(GameState, Player, smart2, Move) :-
+%     valid_moves(GameState, Player, ListOfMoves),
+%     next_player(Player, NextPlayer),
+%     valid_moves
+%     write('Possible Moves: '),
+%     length(ListOfMoves, NumMoves),
+%     write(NumMoves),
+%     write('\n'),
+%     % get best move
+%     min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).

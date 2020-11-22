@@ -13,32 +13,32 @@ write_player_move(black) :-
     write('It\'s black\'s turn:\n').
 
 
+move_type('m').
+move_type('p').
+move_type(_) :- write('Invalid operation :(\n').
+
+read_ring('m', GameState, Player, RingDisplace, NewGameState) :-
+    read_displace('MOVE RING\n', RingDisplace),
+    move_ring(GameState, Player, RingDisplace, NewGameState).
+read_ring('p', GameState, Player, RingDisplace, NewGameState) :-
+    % TODO: Check if you still have rings to place
+    read_coord_pair('PLACE NEW RING\n', PlaceRingCoords),
+    new_displace([-1, -1], PlaceRingCoords, RingDisplace),
+    place_new_ring(GameState, Player, PlaceRingCoords, NewGameState).
+
 read_move(GameState, Player, Move) :-
     write_player_move(Player),
     % Move or Place Ring
     write('Would you like to move or place a new ring? [m / p] \n'),
     read_char(RingType),
-    it(
-        (RingType \== 'm' , RingType \== 'p'),
-        (
-            write('Invalid operation :(\n'),
-            fail
-        )
-    ),
-    ite(
-        RingType == 'm',
-        (read_displace('MOVE RING\n', RingDisplace)),
-        (
-            % TODO: Check if you still have rings to place
-            read_coord_pair('PLACE NEW RING\n', PlaceRingCoords),
-            new_displace([-1, -1], PlaceRingCoords, RingDisplace)
-        )
-    ),
+    %Used to check if it is m or p
+    move_type(RingType),
+    read_ring(RingType, GameState, Player, RingDisplace, AfterRingGameState),
     % Move own Ball
     read_displace('MOVE BALL\n', BallDisplace),
     % RingDisplace = [[-1, -1], [0, 0]],
     % BallDisplace = [[4, 0], [1, 3]],
-    move_ball(GameState, Player, BallDisplace, NewGameState, BallsToDisplace),
+    move_ball(AfterRingGameState, Player, BallDisplace, NewGameState, BallsToDisplace),
     next_player(Player, DisplacedPlayer),
     read_displacements(NewGameState, DisplacedPlayer, BallsToDisplace, [], FinalDisplacements),
     

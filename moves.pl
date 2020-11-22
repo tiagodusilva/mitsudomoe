@@ -177,6 +177,12 @@ relocate_balls(GameState, Player, BallsToDisplace, [Displace | Displacements], N
 % Return a value for the board
 % At the moment only takes into account the distance of the player's balls to the final cells
 value(GameState, Player, Value) :-
+    check_own_cells(GameState, Player),
+    Value is 9998.
+value(GameState, Player, Value) :-
+    check_enemy_cells(GameState, Player),
+    Value is -9998.
+value(GameState, Player, Value) :-
     get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
     ball_distance_score(GameState, Player, StackCoords, Value).
 
