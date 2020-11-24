@@ -95,11 +95,11 @@ handle_winner(GameState, NextPlayer, _, black) :-
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [2, 4], [2]],
-            [ [],     [],     [],  [2, 4],     [2, 4]],
+            [ [],     [],     [],  [2, 4], [2, 4]],
+            [ [],     [],     [],  [],     [2, 4]],
             [ [],     [],     [],  [],     []],
-            [ [1, 3], [1, 3], [],  [],     []],
-            [ [1], [1, 3], [],  [],     []]
+            [ [1, 3], [], [],  [],     []],
+            [ [1, 3], [1, 3], [],  [],     []]
         ],
         4, % Unplayed white rings
         4, % Unplayed black rings
@@ -111,12 +111,18 @@ play_test(Test) :-
     % Move = [[[-1, -1], [3, 1]], [[1, 3], [3, 1]], [[[2, 2], [4, 0]]], black],
     % move(GameState, Move, _).
     test_game(GameState),
-    valid_moves(GameState, black, ListOfMoves),
-    write(ListOfMoves),
-    write('\nLenght: '),
-    length(ListOfMoves, Length),
-    write(Length),
-    !, member(Test, ListOfMoves).
+    valid_moves(GameState, white, ListOfMoves),
+    nth0(0, ListOfMoves, Move),
+    % lambda_evaluate_move_d2(GameState, white, Move, Test),
+    min_map(ListOfMoves, [lambda_evaluate_move_d2, GameState, Player], Test),
+    write(Test),
+    nl.
+    % valid_moves(GameState, black, ListOfMoves),
+    % write(ListOfMoves),
+    % write('\nLenght: '),
+    % length(ListOfMoves, Length),
+    % write(Length),
+    % !, member(Test, ListOfMoves).
 
 
 
@@ -164,10 +170,18 @@ pick_move(GameState, Player, c-h, Move) :-
     choose_move(GameState, Player, smart, Move).
 
 
-
 choose_move(GameState, Player, random, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
     random_member(Move, ListOfMoves).
+
+choose_move(GameState, Player, smart, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    % write('Possible Moves: '),
+    % length(ListOfMoves, NumMoves),
+    % write(NumMoves),
+    % nl,
+    % get best move
+    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
 
 
 lambda_evaluate_move(GameState, Player, Move, Value) :-
@@ -176,25 +190,44 @@ lambda_evaluate_move(GameState, Player, Move, Value) :-
     next_player(Player, NextPlayer),
     value(NewGameState, NextPlayer, ValueEnemy),
     random(-0.5, 0.5, Rand),
-    Value is ValuePlayer + ValueEnemy * 0.5 + Rand.
+    Value is ValuePlayer + ValueEnemy * 0.5 + Rand. % Rand is used to make the AI not deterministic
     % Value is ValuePlayer + ValueEnemy * 0.5.
 
-choose_move(GameState, Player, smart, Move) :-
-    valid_moves(GameState, Player, ListOfMoves),
-    write('Possible Moves: '),
-    length(ListOfMoves, NumMoves),
-    write(NumMoves),
-    write('\n'),
-    % get best move
-    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
 
-% choose_move(GameState, Player, smart2, Move) :-
-%     valid_moves(GameState, Player, ListOfMoves),
-%     next_player(Player, NextPlayer),
-%     valid_moves
-%     write('Possible Moves: '),
-%     length(ListOfMoves, NumMoves),
-%     write(NumMoves),
-%     write('\n'),
-%     % get best move
-%     min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
+% % % % % % DEPTH 2 OPTIONAL STUFF
+choose_move(GameState, Player, smart2, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    % get best move
+    min_map(ListOfMoves, [lambda_evaluate_move_d2, GameState, Player], Move).
+
+%Used to check if a move will make the enemy win on his best play, otherwise calculate value normally
+value_calc(Winner, _, Winner, _, Value) :-
+    Value is 5000.
+value_calc(_, GameState, Player, D1Value, Value) :-
+    next_player(Player, NextPlayer),
+    choose_move_V(GameState, NextPlayer, D2Value),
+    Value is D1Value + 0.2 * D2Value.
+
+lambda_evaluate_move_d2(GameState, Player, Move, Value) :-
+    %Evaluate first play
+    value(GameState, Player, D1Value),
+    %Make first move
+    move(GameState, Move, NewGameState),
+    %get best move of enemy
+    next_player(Player, Enemy),
+    choose_move(NewGameState, Enemy, smart, NextMove),
+    move(NewGameState, NextMove, NextGameState),
+    game_over(GameState, Enemy, Winner),
+    % Calculation of the value if the game didnt end on the enemy move
+    value_calc(Winner, NextGameState, Enemy, D1Value, Value).
+
+%Returns the value for the best move (Used on depth 2)
+choose_move_V(GameState, Player, Value) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    % get best move
+    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move),
+    move(GameState, Move, NewGameState),
+    value(NewGameState, Player, Value).
+
+
+    
