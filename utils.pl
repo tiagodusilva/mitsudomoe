@@ -45,11 +45,7 @@ min_map([], _, Min, Min, _).
 min_map([H | List], Predicate, Min, CurBest, CurBestVal) :-
     append(Predicate, [H, Value], PredList),
     Pred =.. PredList,
-    ite(
-        Pred,
-        true,
-        write('NANI\n')
-    ),
+    Pred,
     min_map_is_better(H, Value, CurBest, CurBestVal, NextBest, NextBestVal),
     min_map(List, Predicate, Min, NextBest, NextBestVal).
 
