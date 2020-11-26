@@ -159,10 +159,32 @@ read_displacements(GameState, Player, BallsToDisplace, [Displacement | T]) :-
 col_to_code(Col, Code) :-
     Code is Col + 97.
 
+
 write_balls_to_displace([]) :-
     nl.
 % write_balls_to_displace([Displace | BallsToDisplace]) :-
     
+
+
+get_level(s, smart).
+get_level(r, random).
+
+% Reads the ai level
+read_level(h-h, human-human).
+read_level(h-c, human-Level) :-
+    read_level(c-h, Level-human).
+read_level(c-h, Level-human) :-
+    write('Choose AI level [s]mart or [r]andom:'),
+    %TODO
+    read(LevelLetter),
+    get_level(LevelLetter, Level).
+read_level(c-c, Level1-Level2) :-
+    write('Choose AI 1 level [s]mart or [r]andom:'),
+    read(Level1Letter),
+    get_level(Level1Letter, Level),
+    write('Choose AI 2 level [s]mart or [r]andom:'),
+    read(Level2Letter),
+    get_level(Level2Letter, Level).
 
 
 
