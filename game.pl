@@ -25,6 +25,7 @@ play :-
     print_legend,
     read_mode(ModeNumber, 4),
     mode(ModeNumber, Mode),
+    read_level(Mode, Level),
     actual_game_loop(GameState, white, Mode, Level).
 
 
