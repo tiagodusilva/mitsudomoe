@@ -1,111 +1,158 @@
-read_char(Char) :-
-    read(Char),
-    atom(Char).
+read_code(Code, Possible) :-
+    get_code(Code),
+    write(Code), nl,
+    member(Code, Possible).
 
-read_number(Number) :-
-    read(Number),
-    number(Number).
+read_char(Char, Possible) :-
+    get_char(Char),
+    member(Char, Possible).
+
+% Inclusive on both ends to facilitate A-Z (but uses their ASCII codes)
+% read_code_range(Char, ['A'-'Z', 'a'-'z']) :-
+read_code_range(Code, Ranges) :-
+    get_code(Code),
+    is_code_in_range(Code, Ranges).
+
+is_code_in_range(_, []) :-
+    fail.
+is_code_in_range(Code, [RangeStart-RangeEnd | _]) :-
+    Code >= RangeStart,
+    Code =< RangeEnd.
+is_code_in_range(Code, [_ | T]) :-
+    is_code_in_range(Code, T).
+
+read_digit(Digit) :-
+    read_code_range(Code, [48-57]),
+    Digit is Code - 48.
+
+read_lowercase_code(Code) :-
+    read_code_range(Code, [97-122]).
+read_lowercase(Letter) :-
+    read_lowercase_code(Code),
+    char_code(Letter, Code).
+
+read_uppercase_code(Code) :-
+    read_code_range(Code, [65-90]).
+read_uppercase(Letter) :-
+    read_uppercase_code(Code),
+    char_code(Letter, Code).
+
+read_letter_code(Code) :-
+    read_code_range(Code, [65-90, 97-122]).
+read_letter(Letter) :-
+    read_letter_code(Code),
+    char_code(Letter, Code).
+
+% Structured oddly to allow either A2 or 2B
+read_coord(Coord) :-
+    read_code_range(Code, [65-90, 97-122, 48-57]),
+    read_coord_part2(Code, Number, Col),
+    Coord = [Number, Col].
+% A2 format
+read_coord_part2(Code, Number, Col) :-
+    code_to_col(Code, Col),
+    Col < 5,
+    read_digit(Number),
+    Number < 5.
+% 2b format
+read_coord_part2(Code, Number, Col) :-
+    number_code_to_digit(Code, Number),
+    Number < 5,
+    read_letter_code(Code2),
+    code_to_col(Code2, Col),
+    Col < 5.
+
+% Converts ASCII code of a digit to a number
+number_code_to_digit(Code, Number) :-
+    Code >= 48,
+    Code =< 57,
+    Number is Code - 48.
+% Converts ASCII code of an uppercase letter to the respective collumn
+code_to_col(Code, Col) :-
+    Code >= 65,
+    Code =< 90,
+    Col is Code - 65.
+% Converts ASCII code of an lowercase letter to the respective collumn
+code_to_col(Code, Col) :-
+    Code >= 97,
+    Code =< 122,
+    Col is Code - 97.
 
 
 write_player_move(white) :-
-    write('It\'s white\'s turn:\n').
+    write('--------------------'), nl,
+    write('|   WHITE\'S TURN    |'), nl,
+    write('--------------------'), nl.
 write_player_move(black) :-
-    write('It\'s black\'s turn:\n').
+    write('--------------------'), nl,
+    write('|   BLACK\'S TURN    |'), nl,
+    write('--------------------'), nl.
 
-
-move_type('m').
-move_type('p').
-move_type(_) :- write('Invalid operation :(\n').
 
 read_ring('m', GameState, Player, RingDisplace, NewGameState) :-
-    read_displace('MOVE RING\n', RingDisplace),
+    read_displace('MOVE RING', RingDisplace),
     move_ring(GameState, Player, RingDisplace, NewGameState).
 read_ring('p', GameState, Player, RingDisplace, NewGameState) :-
     % TODO: Check if you still have rings to place
-    read_coord_pair('PLACE NEW RING\n', PlaceRingCoords),
+    write('Select where to place: '),
+    read_coord(PlaceRingCoords), skip_line,
     new_displace([-1, -1], PlaceRingCoords, RingDisplace),
     place_new_ring(GameState, Player, PlaceRingCoords, NewGameState).
 
 read_move(GameState, Player, Move) :-
-    write_player_move(Player),
+    nl,
+    write_player_move(Player), nl,
+    repeat,
     % Move or Place Ring
-    write('Would you like to move or place a new ring? [m / p] \n'),
-    read_char(RingType),
-    %Used to check if it is m or p
-    move_type(RingType),
+    write('---- Ring Phase ----'), nl,
+    write('[M]ove or [P]lace a ring: '),
+    read_char(RingType, ['m', 'p']), skip_line,
     read_ring(RingType, GameState, Player, RingDisplace, AfterRingGameState),
     % Move own Ball
-    read_displace('MOVE BALL\n', BallDisplace),
-    % RingDisplace = [[-1, -1], [0, 0]],
-    % BallDisplace = [[4, 0], [1, 3]],
+    write('---- Ball Phase ----'), nl,
+    read_displace(BallDisplace),
     move_ball(AfterRingGameState, Player, BallDisplace, NewGameState, BallsToDisplace),
     next_player(Player, DisplacedPlayer),
-    read_displacements(NewGameState, DisplacedPlayer, BallsToDisplace, [], FinalDisplacements),
-    
-
+    % Move enemy balls if needed
+    read_displacements(NewGameState, DisplacedPlayer, BallsToDisplace, FinalDisplacements),
     new_move(RingDisplace, BallDisplace, FinalDisplacements, Player, Move).
 
 
-read_mode(Mode) :-
+read_mode(Mode, Max) :-
     print_mode_select,
-    read_number(Mode).
+    repeat,
+    read_digit(Mode),
+    skip_line,
+    Mode =< Max.
 
-letter_to_col('a', 0).
-letter_to_col('b', 1).
-letter_to_col('c', 2).
-letter_to_col('d', 3).
-letter_to_col('e', 4).
-letter_to_col('f', 5).
-letter_to_col('g', 6).
-letter_to_col('h', 7).
-letter_to_col('i', 8).
-letter_to_col('j', 9).
-letter_to_col('k', 10).
-letter_to_col('l', 11).
-letter_to_col('m', 12).
-letter_to_col('n', 13).
-letter_to_col('o', 14).
-letter_to_col('p', 15).
-letter_to_col('q', 16).
-letter_to_col('r', 17).
-letter_to_col('s', 18).
-letter_to_col('t', 19).
-letter_to_col('u', 20).
-letter_to_col('v', 21).
-letter_to_col('w', 22).
-letter_to_col('x', 23).
-letter_to_col('y', 24).
-letter_to_col('z', 25).
-
-% Displays custom Message and reads a pair of coordinates
-read_coord_pair(Message, Coords) :-
-    write(Message),
-    write('Please insert row [0 ~ 4] '),
-    read_number(Row),
-    write('Please insert col [a ~ e] '),
-    read_char(ColLetter),
-    letter_to_col(ColLetter, Col),
-    number(Col),
-    Coords = [Row, Col].
 
 % Displays a costum message and reads a displacement(from/to)
-read_displace(Message, Displace) :-
-    write(Message),
-    read_coord_pair('Which piece would you like to move?\n', FromCoords),
-    read_coord_pair('Where would you like to move it to?\n', ToCoords),
+read_displace(Displace) :-
+    write('Select piece to move: '),
+    read_coord(FromCoords), skip_line,
+    write('Select where to: '),
+    read_coord(ToCoords), skip_line,
     new_displace(FromCoords, ToCoords, Displace).
 
-%Reads the displacements after a vault
-read_displacements(_, _, [], Displacements, Displacements).
-read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDisplacements) :-
-    read_displace('DISPLACE ENEMY BALLS\n', Displace),
-    % Displace = [[2, 2], [4, 3]],
-    new_displace(FromCoords, _, Displace),
+
+read_displacements_wrapper(_, _, [], []).
+read_displacements_wrapper(GameState, Player, BallsToDisplace, Displacements) :-
+    write('---- Enemy Ball Relocation Phase ----'), nl,
+    read_displacements(GameState, Player, BallsToDisplace, Displacements).
+
+
+% Reads the displacements after a vault
+read_displacements(_, _, [], []).
+read_displacements(GameState, Player, BallsToDisplace, [Displacement | T]) :-
+    write('Balls left to relocate: '),
+    write(BallsToDisplace), nl,
+    read_displace(Displacement),
+    new_displace(FromCoords, _, Displacement),
     delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
     \+ same_length(BallsToDisplace, NewBallsToDisplace),
-    displace_ball(GameState, Player, Displace, NewGameState),
-    append(Displacements, [Displace], NewDisplacements),
-    read_displacements(NewGameState, Player, NewBallsToDisplace, NewDisplacements, FinalDisplacements).
+    displace_ball(GameState, Player, Displacement, NewGameState),
+    read_displacements(NewGameState, Player, NewBallsToDisplace, T).
+
 
 
 get_level(s, smart).
