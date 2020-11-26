@@ -23,7 +23,7 @@ play :-
     initial(GameState),
     print_title,
     print_legend,
-    read_mode(ModeNumber),
+    read_mode(ModeNumber, 4),
     mode(ModeNumber, Mode),
     actual_game_loop(GameState, white, Mode).
 
@@ -95,9 +95,9 @@ handle_winner(GameState, NextPlayer, _, black) :-
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [2, 4], [2]],
+            [ [],     [],     [],  [2, 4], []],
             [ [],     [],     [],  [2, 4],     [2, 4]],
-            [ [],     [],     [],  [],     []],
+            [ [],     [],     [2, 4],  [],     []],
             [ [1, 3], [1, 3], [],  [],     []],
             [ [1], [1, 3], [],  [],     []]
         ],
@@ -108,15 +108,17 @@ test_game(GameState) :-
 
 
 play_test(Test) :-
+    repeat,
+    read_coord(Test), skip_line.
     % Move = [[[-1, -1], [3, 1]], [[1, 3], [3, 1]], [[[2, 2], [4, 0]]], black],
     % move(GameState, Move, _).
-    test_game(GameState),
-    valid_moves(GameState, black, ListOfMoves),
-    write(ListOfMoves),
-    write('\nLenght: '),
-    length(ListOfMoves, Length),
-    write(Length),
-    !, member(Test, ListOfMoves).
+    % test_game(GameState),
+    % valid_moves(GameState, black, ListOfMoves),
+    % write(ListOfMoves),
+    % write('\nLenght: '),
+    % length(ListOfMoves, Length),
+    % write(Length),
+    % !, member(Test, ListOfMoves).
 
 
 

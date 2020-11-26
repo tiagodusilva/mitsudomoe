@@ -116,7 +116,7 @@ print_mode_select :-
     nl,
     write('4 - Computer vs Computer'),
     nl,
-    write('Choose mode:').
+    write('Choose mode: ').
 
 print_player(white) :-
     print_line_padding,
