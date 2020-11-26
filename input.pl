@@ -94,7 +94,7 @@ read_ring('m', GameState, Player, RingDisplace, NewGameState) :-
     read_displace(RingDisplace),
     move_ring(GameState, Player, RingDisplace, NewGameState).
 read_ring('p', GameState, Player, RingDisplace, NewGameState) :-
-    get_player_remaining_rings(GameState, Player, Rings),
+    get_remaining_player_rings(GameState, Player, Rings),
     Rings > 0,
     write('Select where to place: '),
     read_coord(PlaceRingCoords), skip_line,
