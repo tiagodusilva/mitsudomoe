@@ -25,28 +25,28 @@ play :-
     print_legend,
     read_mode(ModeNumber),
     mode(ModeNumber, Mode),
-    actual_game_loop(GameState, white, Mode).
+    actual_game_loop(GameState, white, Mode, Level).
 
 
-game_loop(GameState, Player, h-c) :-
-    actual_game_loop(GameState, Player, c-h).
-game_loop(GameState, Player, c-h) :-
-    actual_game_loop(GameState, Player, h-c).
-game_loop(GameState, Player, Mode) :-
-    actual_game_loop(GameState, Player, Mode).
+game_loop(GameState, Player, h-c, Level1-Level2) :-
+    actual_game_loop(GameState, Player, c-h, Level2-Level1).
+game_loop(GameState, Player, c-h, Level1-Level2) :-
+    actual_game_loop(GameState, Player, h-c, Level2-Level1).
+game_loop(GameState, Player, Mode, Level1-Level2) :-
+    actual_game_loop(GameState, Player, Mode, Level2-Level1).
 
 
-actual_game_loop(GameState, Player, Mode) :-
+actual_game_loop(GameState, Player, Mode, Level) :-
     display_game(GameState, Player),
     repeat,
-    pick_move(GameState, Player, Mode, Move),
+    pick_move(GameState, Player, Mode, Move, Level),
     % new_move([[4, 1], [1, 3]], [[4, 0], [1, 3]], [[[2, 2], [4, 3]]], Player, Move),
     try_move(GameState, Move, NextGameState),
     next_player(Player, NextPlayer),
     %Used to check the moves of the computer
     bot_sleep(Mode),
     game_over(NextGameState, Player, Winner),
-    handle_winner(NextGameState, NextPlayer, Mode, Winner).
+    handle_winner(NextGameState, NextPlayer, Mode, Winner, Level).
 
 
 bot_sleep(c-c) :-
@@ -61,8 +61,8 @@ try_move(_, _, _) :-
     fail.
 
 
-handle_winner(NextGameState, NextPlayer, Mode, none) :-
-    game_loop(NextGameState, NextPlayer, Mode).
+handle_winner(NextGameState, NextPlayer, Mode, none, Level) :-
+    game_loop(NextGameState, NextPlayer, Mode, Level).
 handle_winner(GameState, NextPlayer, _, white) :-
     display_game(GameState, NextPlayer),
     write('White won!\n').
@@ -160,14 +160,15 @@ check_own_cells(GameState, Player) :-
     is_ball(Elem2),
     is_ball(Elem3).
 
-pick_move(GameState, Player, h-h, Move) :-
+% pick_move(GameState, Player, Mode, Move, Level)
+pick_move(GameState, Player, h-h, Move, _) :-
     read_move(GameState, Player, Move).
-pick_move(GameState, Player, h-c, Move) :-
+pick_move(GameState, Player, h-c, Move, _) :-
     read_move(GameState, Player, Move).
-pick_move(GameState, Player, c-c, Move) :-
-    choose_move(GameState, Player, smart, Move).
-pick_move(GameState, Player, c-h, Move) :-
-    choose_move(GameState, Player, smart, Move).
+pick_move(GameState, Player, c-c, Move, Level-_) :-
+    choose_move(GameState, Player, Level, Move).
+pick_move(GameState, Player, c-h, Move, Level-_) :-
+    choose_move(GameState, Player, Level, Move).
 
 
 choose_move(GameState, Player, random, Move) :-

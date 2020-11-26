@@ -95,7 +95,6 @@ read_displace(Message, Displace) :-
     read_coord_pair('Where would you like to move it to?\n', ToCoords),
     new_displace(FromCoords, ToCoords, Displace).
 
-%TODO change length comparation
 %Reads the displacements after a vault
 read_displacements(_, _, [], Displacements, Displacements).
 read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDisplacements) :-
@@ -109,7 +108,24 @@ read_displacements(GameState, Player, BallsToDisplace, Displacements, FinalDispl
     read_displacements(NewGameState, Player, NewBallsToDisplace, NewDisplacements, FinalDisplacements).
 
 
+get_level(s, smart).
+get_level(r, random).
 
-
+% Reads the ai level
+read_level(h-h, human-human).
+read_level(h-c, human-Level) :-
+    read_level(c-h, Level-human).
+read_level(c-h, Level-human) :-
+    write('Choose AI level [s]mart or [r]andom:'),
+    %TODO
+    read(LevelLetter),
+    get_level(LevelLetter, Level).
+read_level(c-c, Level1-Level2) :-
+    write('Choose AI 1 level [s]mart or [r]andom:'),
+    read(Level1Letter),
+    get_level(Level1Letter, Level),
+    write('Choose AI 2 level [s]mart or [r]andom:'),
+    read(Level2Letter),
+    get_level(Level2Letter, Level).
 
 
