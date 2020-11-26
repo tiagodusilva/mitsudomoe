@@ -74,6 +74,12 @@ can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     add_coords(FromCoords, Delta, NextCoords),
     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToDisplace).
 
+% Checks if the ball if of an enemy and then appends it to ballsDisplaced
+add_displaced_ball_if(Player, TopElem, FromCoords, BallsDisplaced, NewBallsDisplaced) :-
+    \+ owns_ball(Player, TopElem),
+    append(BallsDisplaced, [FromCoords], NewBallsDisplaced).
+add_displaced_ball_if(_, _, _, BallsDisplaced, BallsDisplaced).
+
 % can_vault_aux(+GameState, +Player, +Displace, +Delta, +BallsDisplaced, -BallsToDisplace)
 % Auxiliary function of can_vault/4 that return the ballstodisplace after a vault if it is a possible one
 % Can safely ignore the last stack (verification is done previously)
@@ -82,14 +88,25 @@ can_vault_aux(GameState, Player, [FromCoords, ToCoords], Delta, BallsDisplaced, 
     get_top_elem(GameState, FromCoords, TopElem),
     is_ball(TopElem),
     add_coords(FromCoords, Delta, NextCoords),
-    ite(
-        owns_ball(Player, TopElem),
-        can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace),
-        (
-            append(BallsDisplaced, [FromCoords], NewBallsDisplaced),
-            can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, NewBallsDisplaced, BallsToDisplace)
-        )
-    ).
+    add_displaced_ball_if(Player, TopElem, FromCoords, BallsDisplaced, NewBallsDisplaced),
+    can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, NewBallsDisplaced, BallsToDisplace).
+    % ite(
+    %     owns_ball(Player, TopElem),
+    %     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, BallsDisplaced, BallsToDisplace),
+    %     (
+    %         append(BallsDisplaced, [FromCoords], NewBallsDisplaced),
+    %         can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, NewBallsDisplaced, BallsToDisplace)
+    %     )
+    % ).
+
+
+displaced_balls_if_can_vault(_, _, FromCoords, ToCoords, BallsToDisplace) :-
+    is_adjacent(FromCoords, ToCoords),
+    % If it is directly adjacent
+    BallsToDisplace = [].
+displaced_balls_if_can_vault(GameState, Player, FromCoords, ToCoords, BallsToDisplace) :-
+    % Can we vault and if so what balls need to be relocated
+    can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace).
 
 % can_move_ball(+GameState, +Player, +Displace, -BallsToDisplace)
 % Checks if we can move a ball to a specified location
@@ -102,13 +119,7 @@ can_move_ball(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     % Verify if there is a player ring to move to
     get_top_elem(GameState, ToCoords, ToLast),
     owns_ring(Player, ToLast),
-    ite(
-        is_adjacent(FromCoords, ToCoords),
-        % If it is directly adjacent
-        BallsToDisplace = [],
-        % Can we vault and if so what balls need to be relocated
-        can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace)
-    ).
+    displaced_balls_if_can_vault(GameState, Player, FromCoords, ToCoords, BallsToDisplace).
 
 % remove_ball(+GameState, +Player, +Coords, -NewGameState)
 % Removes a ball from Coords

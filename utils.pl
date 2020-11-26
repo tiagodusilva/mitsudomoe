@@ -39,17 +39,13 @@ combinations_except(N, Input, Except, Output) :-
 
 
 min_map(List, Predicate, Min) :-
-    min_map(List, Predicate, Min, _, 9999).
+    min_map(List, Predicate, Min, _, 99999).
 
 min_map([], _, Min, Min, _).
 min_map([H | List], Predicate, Min, CurBest, CurBestVal) :-
     append(Predicate, [H, Value], PredList),
     Pred =.. PredList,
-    ite(
-        Pred,
-        true,
-        write('NANI\n')
-    ),
+    Pred,
     min_map_is_better(H, Value, CurBest, CurBestVal, NextBest, NextBestVal),
     min_map(List, Predicate, Min, NextBest, NextBestVal).
 
