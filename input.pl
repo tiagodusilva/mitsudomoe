@@ -90,10 +90,12 @@ write_player_move(black) :-
 
 
 read_ring('m', GameState, Player, RingDisplace, NewGameState) :-
-    read_displace('MOVE RING', RingDisplace),
+    write('Move a ring'), nl,
+    read_displace(RingDisplace),
     move_ring(GameState, Player, RingDisplace, NewGameState).
 read_ring('p', GameState, Player, RingDisplace, NewGameState) :-
-    % TODO: Check if you still have rings to place
+    get_player_remaining_rings(GameState, Player, Rings),
+    Rings > 0,
     write('Select where to place: '),
     read_coord(PlaceRingCoords), skip_line,
     new_displace([-1, -1], PlaceRingCoords, RingDisplace),
@@ -105,7 +107,7 @@ read_move(GameState, Player, Move) :-
     repeat,
     % Move or Place Ring
     write('---- Ring Phase ----'), nl,
-    write('[M]ove or [P]lace a ring: '),
+    write('[m]ove or [p]lace a ring: '),
     read_char(RingType, ['m', 'p']), skip_line,
     read_ring(RingType, GameState, Player, RingDisplace, AfterRingGameState),
     % Move own Ball
@@ -145,7 +147,7 @@ read_displacements_wrapper(GameState, Player, BallsToDisplace, Displacements) :-
 read_displacements(_, _, [], []).
 read_displacements(GameState, Player, BallsToDisplace, [Displacement | T]) :-
     write('Balls left to relocate: '),
-    write(BallsToDisplace), nl,
+    write_balls_to_displace(BallsToDisplace),
     read_displace(Displacement),
     new_displace(FromCoords, _, Displacement),
     delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
@@ -153,6 +155,15 @@ read_displacements(GameState, Player, BallsToDisplace, [Displacement | T]) :-
     displace_ball(GameState, Player, Displacement, NewGameState),
     read_displacements(NewGameState, Player, NewBallsToDisplace, T).
 
+
+col_to_code(Col, Code) :-
+    Code is Col + 97.
+
+
+write_balls_to_displace([]) :-
+    nl.
+% write_balls_to_displace([Displace | BallsToDisplace]) :-
+    
 
 
 get_level(s, smart).
@@ -177,5 +188,6 @@ read_level(c-c, Level1-Level2) :-
     write('Choose AI 2 level [s]mart or [r]andom:'),
     read_char(Level2Char, ['s', 'r']), skip_line,
     get_level(Level2Char, Level2).
+
 
 
