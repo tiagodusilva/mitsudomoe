@@ -14,23 +14,18 @@ put_char_n_times(Char, Times) :-
     put_char_n_times(Char, NextTimes).
 
 
+print_number_with_padding(Number, _) :-
+    Number > 10,
+    X is Number // 10,
+    Y is Number rem 10,
+    digit_code(X, Code1),
+    digit_code(Y, Code2),
+    put_code(Code1),
+    put_code(Code2).
 print_number_with_padding(Number, StuffCharCode) :-
-    ite(
-        Number > 10,
-        (
-            X is Number // 10,
-            Y is Number rem 10,
-            digit_code(X, Code1),
-            digit_code(Y, Code2),
-            put_code(Code1),
-            put_code(Code2)
-        ),
-        (
-            digit_code(Number, Code1),
-            put_code(Code1),
-            put_code(StuffCharCode)
-        )
-    ).
+    digit_code(Number, Code1),
+    put_code(Code1),
+    put_code(StuffCharCode).
 
 
 digit_code(0, 48).
@@ -203,17 +198,23 @@ print_line_bot([Stack | Line], CellWidth) :-
     print_line_bot(Line, CellWidth).
 
 
+print_left_padding(CurLevel, LineNumber, NumberOfLevels) :-
+    CurLevel =:= NumberOfLevels // 2,
+    print_line_number(LineNumber).
+print_left_padding(_, _, _) :-
+    print_line_padding.
+
 print_line_mid(Line, LineNumber, NumberOfLevels, CellWidth) :-
     print_line_mid(Line, LineNumber, NumberOfLevels, 0, CellWidth).
 
-
 print_line_mid(_, _, X, X, _).
 print_line_mid(Line, LineNumber, NumberOfLevels, CurLevel, CellWidth) :-
-    ite(
-        CurLevel is NumberOfLevels // 2,
-        print_line_number(LineNumber),
-        print_line_padding
-    ),
+    print_left_padding(CurLevel, LineNumber, NumberOfLevels),
+    % ite(
+    %     CurLevel =:= NumberOfLevels // 2,
+    %     print_line_number(LineNumber),
+    %     print_line_padding
+    % ),
     print_line_mid_inner(Line, NumberOfLevels, CurLevel, CellWidth),
     nl,
     NextLevel is CurLevel + 1,

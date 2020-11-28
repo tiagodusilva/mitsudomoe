@@ -135,6 +135,8 @@ game_over(GameState, Player, Winner) :-
         Winner = Player
     ).
 
+
+
 %Checks for player colored balls on the enemy's starting cells
 check_enemy_cells(GameState, Player) :-
     next_player(Player, Enemy),

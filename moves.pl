@@ -74,7 +74,7 @@ can_vault(GameState, Player, [FromCoords, ToCoords], BallsToDisplace) :-
     add_coords(FromCoords, Delta, NextCoords),
     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToDisplace).
 
-% Checks if the ball if of an enemy and then appends it to ballsDisplaced
+% Checks if the ball if of an enemy and then appends it to ballsDisplaced (on vault)
 add_displaced_ball_if(Player, TopElem, FromCoords, BallsDisplaced, NewBallsDisplaced) :-
     \+ owns_ball(Player, TopElem),
     append(BallsDisplaced, [FromCoords], NewBallsDisplaced).

@@ -6,13 +6,6 @@ ite(I, T, _) :-
 ite(_, _, E) :-
     E.
 
-% If then
-it(I, T) :- ite(I, T, true).
-
-% Clones a list
-clone([],[]).
-clone([H|T],[H|Z]):- clone(T,Z).
-
 
 % replace(OldList, Index, ElemToReplace, NewList)
 replace([_|T], 0, ElemToReplace, [ElemToReplace|T]).

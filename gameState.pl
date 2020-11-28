@@ -161,13 +161,19 @@ get_stacks_if_row([], _, _, StackCoords, StackCoords).
 get_stacks_if_row([Stack | Row], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
     append(PredicateList, [Stack], FilledPredicate),
     T =.. FilledPredicate,
-    ite(
-        T,
-        append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
-        NextStackCoords = StackCoords
-    ),
+    % ite(
+    %     T,
+    %     append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
+    %     NextStackCoords = StackCoords
+    % ),
+    T,
+    append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
     NextCol is ColIndex + 1,
     get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], NextStackCoords, FinalStackCoords).
+% Used if the predicate call fails
+get_stacks_if_row([_ | Row], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
+    NextCol is ColIndex + 1,
+    get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], StackCoords, FinalStackCoords).
 
 is_ball_from_player_on_top_of_stack(Player, Stack) :-
     last(Stack, TopElem),
