@@ -20,7 +20,7 @@ mode(3, h-c).
 mode(4, c-c).
 
 play :-
-    test_game(GameState),
+    initial(GameState),
     print_title,
     print_legend,
     read_mode(ModeNumber, 4),
@@ -52,7 +52,7 @@ actual_game_loop(GameState, Player, Mode, Level) :-
 
 bot_sleep(c-c) :-
     % true.
-    sleep(1.5).
+    sleep(0.5).
 bot_sleep(_).
 
 try_move(GameState, Move, NewGameState) :-
@@ -77,21 +77,6 @@ handle_winner(GameState, NextPlayer, _, black, _) :-
 % 2 : Black Ring
 % 3 : White Ball
 % 4 : Black Ball
-
-% test_game(GameState) :-
-%     GameState = [
-%         [  % Game board
-%             [ [],     [],     [],  [2, 4], [2]],
-%             [ [],     [],     [],  [2, 4],     [2, 4]],
-%             [ [],     [],     [1, 3],  [],     []],
-%             [ [1, 3], [1],     [],  [],     []],
-%             [ [1], [1, 3], [],  [],     []]
-%         ],
-%         3, % Unplayed white rings
-%         4, % Unplayed black rings
-%         3  % Shown Stack Size
-%     ].
-
 
 test_game(GameState) :-
     GameState = [
@@ -124,16 +109,12 @@ play_test(Test) :-
 
 
 % To check after each player finished their turn (Return Winner(white/black/none))
-game_over(GameState, Player, Winner) :-
-    ite(
-        \+ check_enemy_cells(GameState, Player),
-        ite(
-            check_own_cells(GameState, Player),
-            next_player(Player, Winner),
-            Winner = none
-        ),
-        Winner = Player
-    ).
+game_over(GameState, Player, Player) :-
+    check_enemy_cells(GameState, Player), !.
+game_over(GameState, Player, Enemy) :-
+    check_own_cells(GameState, Player), 
+    next_player(Player, Enemy), !.
+game_over(_, _, none).
 
 
 
