@@ -139,7 +139,7 @@ print_top_letters([_ | Board], CharCode, CellWidth) :-
 
 print_board(Board, ShownStackSize) :-
     % Nearest odd integer (2 -> 3, 3 -> 3)
-    CellWidth is ((ShownStackSize // 2) * 2) + 1,
+    CellWidth is ((ShownStackSize // 2) * 2) + 3,
     print_line_padding,
     print_top_letters(Board, 65, CellWidth),  % 65 is 'a'
     print_board(Board, 0, ShownStackSize, CellWidth).

@@ -1,8 +1,6 @@
 read_code(Code, Possible) :-
     get_code(Code),
-    write(Code), nl,
     member(Code, Possible).
-
 read_char(Char, Possible) :-
     get_char(Char),
     member(Char, Possible).
@@ -145,14 +143,18 @@ read_displacements_wrapper(GameState, Player, BallsToDisplace, Displacements) :-
 
 % Reads the displacements after a vault
 read_displacements(_, _, [], []).
-read_displacements(GameState, Player, BallsToDisplace, [Displacement | T]) :-
+read_displacements(_, _, [Coords], [[Coords, To]]) :-
+    write('Where to relocate ball at '),
+    write_coord(Coords),
+    write(': '),
+    read_coord(To).
+read_displacements(GameState, Player, BallsToDisplace, [[From, To] | T]) :-
     write('Balls left to relocate: '),
     write_balls_to_displace(BallsToDisplace),
-    read_displace(Displacement),
-    new_displace(FromCoords, _, Displacement),
-    delete(BallsToDisplace, FromCoords, NewBallsToDisplace),
+    read_displace([From, To]),
+    delete(BallsToDisplace, From, NewBallsToDisplace),
     \+ same_length(BallsToDisplace, NewBallsToDisplace),
-    displace_ball(GameState, Player, Displacement, NewGameState),
+    displace_ball(GameState, Player, [From, To], NewGameState),
     read_displacements(NewGameState, Player, NewBallsToDisplace, T).
 
 
@@ -160,10 +162,18 @@ col_to_code(Col, Code) :-
     Code is Col + 97.
 
 
+write_coord([Row, Col]) :-
+    col_to_code(Col, Code),
+    write(Row),
+    put_code(Code).
+
+
 write_balls_to_displace([]) :-
     nl.
-% write_balls_to_displace([Displace | BallsToDisplace]) :-
-    
+write_balls_to_displace([Coord | BallsToDisplace]) :-
+    write_coord(Coord),
+    write(' '),
+    write_balls_to_displace(BallsToDisplace).
 
 
 get_level(s, smart).

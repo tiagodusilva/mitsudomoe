@@ -20,7 +20,7 @@ mode(3, h-c).
 mode(4, c-c).
 
 play :-
-    initial(GameState),
+    test_game(GameState),
     print_title,
     print_legend,
     read_mode(ModeNumber, 4),
@@ -96,8 +96,8 @@ handle_winner(GameState, NextPlayer, _, black, _) :-
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [2, 4], []],
-            [ [],     [],     [],  [2, 4],     [2, 4]],
+            [ [2],     [],     [],  [2, 4], []],
+            [ [2],     [],     [],  [2, 4],     [2, 4]],
             [ [],     [],     [2, 4],  [],     []],
             [ [1, 3], [1, 3], [],  [],     []],
             [ [1], [1, 3], [],  [],     []]
