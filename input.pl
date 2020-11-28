@@ -184,17 +184,20 @@ read_level(h-h, human-human).
 read_level(h-c, human-Level) :-
     read_level(c-h, Level-human).
 read_level(c-h, Level-human) :-
+    repeat,
     write('Choose AI level [s]mart or [r]andom:'),
     %TODO
-    read(LevelLetter),
-    get_level(LevelLetter, Level).
+    read_char(LevelChar, ['s', 'r']), skip_line,
+    get_level(LevelChar, Level).
 read_level(c-c, Level1-Level2) :-
+    repeat,
     write('Choose AI 1 level [s]mart or [r]andom:'),
-    read(Level1Letter),
-    get_level(Level1Letter, Level),
+    read_char(Level1Char, ['s', 'r']), skip_line,
+    get_level(Level1Char, Level1),
+    repeat,
     write('Choose AI 2 level [s]mart or [r]andom:'),
-    read(Level2Letter),
-    get_level(Level2Letter, Level).
+    read_char(Level2Char, ['s', 'r']), skip_line,
+    get_level(Level2Char, Level2).
 
 
 

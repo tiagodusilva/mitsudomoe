@@ -25,6 +25,7 @@ play :-
     print_legend,
     read_mode(ModeNumber, 4),
     mode(ModeNumber, Mode),
+    read_level(Mode, Level),
     actual_game_loop(GameState, white, Mode, Level).
 
 
@@ -63,10 +64,10 @@ try_move(_, _, _) :-
 
 handle_winner(NextGameState, NextPlayer, Mode, none, Level) :-
     game_loop(NextGameState, NextPlayer, Mode, Level).
-handle_winner(GameState, NextPlayer, _, white) :-
+handle_winner(GameState, NextPlayer, _, white, _) :-
     display_game(GameState, NextPlayer),
     write('White won!\n').
-handle_winner(GameState, NextPlayer, _, black) :-
+handle_winner(GameState, NextPlayer, _, black, _) :-
     display_game(GameState, NextPlayer),
     write('Black won!\n').
 
