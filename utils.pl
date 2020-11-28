@@ -26,7 +26,7 @@ replace([H|T1], Index, ElemToReplace, [H|T2]) :-
 % http://kti.ms.mff.cuni.cz/~bartak/prolog/combinatorics.html
 % Generates a combination
 comb(0,_,[]).
-comb(N,[X|T],[X|Comb]):- N>0,N1 is N-1,comb(N1,T,Comb).
+comb(N, [X|T],[X|Comb]):- N>0,N1 is N-1,comb(N1,T,Comb).
 comb(N,[_|T],Comb):- N>0,comb(N,T,Comb).
 
 % Using findall we can create a list with ALL valid combinations
