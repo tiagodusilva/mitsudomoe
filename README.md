@@ -252,7 +252,7 @@ Valor do Tabuleiro = Média(dist(B1, C1), dist(B1, C2), dist(B1,C3)) +
 
 A AI implementada tem duas dificuldades: **smart** e **random**.
 
-Na dificuldade **random** o predicado **choose_move/4** usa o predicado **valid_move/3** e depois apenas escolha um membro aleatório do seu retorno *ListOfMoves* usando **random_member/2**. 
+Na dificuldade **random** o predicado **choose_move/4** usa o predicado **valid_move/3** e depois apenas escolha um membro aleatório do seu retorno *ListOfMoves*. Fazemos esta escolha até que saia uma jogada que não nos perca o jogo, uma ocorrência comum no início do jogo. 
 
 Na dificuldade **smart** o predicado **choose_move/4** usa o predicado **valid_move/3** para gerar *ListOfMoves* com todos os moves possíveis. De seguida usamos um predicado criado por nós chamado **min_map/3** que retorna o elemento de uma lista para o qual o valor de um predicado é mínimo. Desta forma criámos um predicado auxiliar que nos desse o valor de um *move*. Desta forma escolhemos sempre o move com o valor mais baixo.
 
