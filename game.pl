@@ -20,7 +20,7 @@ mode(3, h-c).
 mode(4, c-c).
 
 play :-
-    initial(GameState),
+    test_game(GameState),
     print_title,
     print_legend,
     read_mode(ModeNumber, 4),
@@ -81,41 +81,38 @@ handle_winner(GameState, NextPlayer, _, black, _) :-
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [2],     [],     [],  [2, 4], []],
-            [ [2],     [],     [],  [2, 4],     [2, 4]],
-            [ [],     [],     [2, 4],  [],     []],
-            [ [1, 3], [1, 3], [],  [],     []],
-            [ [1], [1, 3], [],  [],     []]
+            [ [],     [],     [],  [2], []],
+            [ [],     [],     [2, 4],  [2, 4],     [2, 4]],
+            [ [],     [1, 3],     [],  [],     []],
+            [ [], [], [],  [],     []],
+            [ [1, 3], [], [],  [],     [1, 3]]
         ],
-        4, % Unplayed white rings
-        4, % Unplayed black rings
+        1, % Unplayed white rings
+        0, % Unplayed black rings
         3  % Shown Stack Size
     ].
 
-
-play_test(Test) :-
-    repeat,
-    read_coord(Test), skip_line.
-    % Move = [[[-1, -1], [3, 1]], [[1, 3], [3, 1]], [[[2, 2], [4, 0]]], black],
-    % move(GameState, Move, _).
-    % test_game(GameState),
-    % valid_moves(GameState, black, ListOfMoves),
-    % write(ListOfMoves),
-    % write('\nLenght: '),
-    % length(ListOfMoves, Length),
-    % write(Length),
-    % !, member(Test, ListOfMoves).
+play_test(X) :-
+    test_game(GameState),
+    get_valid_move(GameState, white, X).
 
 
-
-% To check after each player finished their turn (Return Winner(white/black/none))
+% To check after each player finished their turn (Winner is white/black/none)
+% game_over(+GameState, +Player, -Winner)
+% Has the player reached the enemy's home spots
 game_over(GameState, Player, Player) :-
     check_enemy_cells(GameState, Player), !.
+% Does the player have all his home spots filled with ANY balls at the end of his turn
 game_over(GameState, Player, Enemy) :-
     check_own_cells(GameState, Player), 
     next_player(Player, Enemy), !.
+% Has the enemy player run out of moves
+game_over(GameState, Player, Player) :-
+    next_player(Player, Enemy),
+    % Does the enemy still have at least one valid move?
+    \+ get_valid_move(GameState, Enemy, _), !.
+% No winner yet
 game_over(_, _, none).
-
 
 
 %Checks for player colored balls on the enemy's starting cells
@@ -157,10 +154,10 @@ choose_move(GameState, Player, random, Move) :-
 
 choose_move(GameState, Player, smart, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
-    % write('Possible Moves: '),
-    % length(ListOfMoves, NumMoves),
-    % write(NumMoves),
-    % nl,
+    write('Possible Moves: '),
+    length(ListOfMoves, NumMoves),
+    write(NumMoves),
+    nl,
     % get best move
     min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
 

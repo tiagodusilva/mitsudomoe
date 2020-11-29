@@ -60,13 +60,11 @@ add_coords([X1, Y1], [X2, Y2], Result) :-
     Result = [Rx, Ry].
 
 is_pos_different([CoordsA, CoordsB]) :- is_pos_different(CoordsA, CoordsB).
-is_pos_different([RowIndexA, ColIndexA], [RowIndexB, ColIndexB]) :-
-    % Either Row or Col must be different
-    % With DeMorgan: not (same row AND same col) 
-    \+ (
-        RowIndexA =:= RowIndexB,
-        ColIndexA =:= ColIndexB
-    ).
+is_pos_different([RowIndexA, _], [RowIndexB, _]) :-
+    \+ RowIndexA is RowIndexB, !.
+is_pos_different([_, ColIndexA], [_, ColIndexB]) :-
+    \+ ColIndexA is ColIndexB, !.
+
 
 % Adjacent is vertical horizontal or diagonal
 is_adjacent([FromCoords, ToCoords]) :- is_adjacent(FromCoords, ToCoords).
@@ -79,38 +77,29 @@ is_adjacent([FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]) :-
     ColAdj =< 1.
 
 
-% Given a value, set it to -1, 0 or 1
-normalize_delta(0, 0).
-normalize_delta(Value, Delta) :-
-    Value < 0,
-    Delta is -1.
-normalize_delta(_, Delta) :-
-    Delta is 1.
-
-
 % Returns a unitary "vector" given two cells
 get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRow, DeltaCol]) :-
     RowAdj is (ToRowIndex - FromRowIndex),
     ColAdj is (ToColIndex - FromColIndex),
-    % Verify if perfect diagonal, horizontal or vertical (in order)
-    \+ (
-        \+ (
-            RowAdj =\= 0,
-            ColAdj =\= 0,
-            % Only true if perfect diagonal
-            abs(RowAdj) =:= abs(ColAdj)
-        ),
-        \+ (
-            RowAdj =\= 0,
-            ColAdj =:= 0
-        ),
-        \+ (
-            RowAdj =:= 0,
-            ColAdj =\= 0
-        )
-    ),
-    normalize_delta(RowAdj, DeltaRow),
-    normalize_delta(ColAdj, DeltaCol).
+    is_valid_direction(RowAdj, ColAdj),
+    DeltaRow is sign(RowAdj),
+    DeltaCol is sign(ColAdj).
+
+
+is_valid_direction(RowAdj, ColAdj) :-
+    RowAdj =\= 0,
+    ColAdj =\= 0,
+    % Only true if perfect diagonal
+    abs(RowAdj) =:= abs(ColAdj).
+is_valid_direction(RowAdj, ColAdj) :-
+    % Checks horizontal movement
+    RowAdj =\= 0,
+    ColAdj =:= 0.
+is_valid_direction(RowAdj, ColAdj) :-
+    % Checks vertical movement
+    RowAdj =:= 0,
+    ColAdj =\= 0.
+
 
 nth0_from_end(Index, List, Elem) :-
     reverse(List, RevList),
