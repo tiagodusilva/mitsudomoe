@@ -49,7 +49,7 @@ actual_game_loop(GameState, Player, Mode, Level) :-
 
 bot_sleep(c-c) :-
     % true.
-    sleep(2).
+    sleep(1).
 bot_sleep(_).
 
 
@@ -95,14 +95,14 @@ pick_move(GameState, Player, c-h, Move, Level-_) :-
 test_game(GameState) :-
     GameState = [
         [  % Game board
-            [ [],     [],     [],  [2], [2]],
-            [ [],     [],     [2, 4],  [2],     [2, 4]],
-            [ [],     [2, 4],     [],  [],     []],
-            [ [1, 3], [], [],  [],     []],
-            [ [1, 3], [], [],  [],     [1, 3]]
+            [ [],     [],     [],  [2, 2, 4], [2]],
+            [ [1],     [],     [],  [2, 4],     [2, 4]],
+            [ [],     [],     [],  [],     []],
+            [ [1, 3], [1, 3], [],  [],     []],
+            [ [1, 3], [1], [],  [],     []]
         ],
-        1, % Unplayed white rings
-        0, % Unplayed black rings
+        3, % Unplayed white rings
+        3, % Unplayed black rings
         3  % Shown Stack Size
     ].
 

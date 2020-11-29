@@ -268,6 +268,10 @@ check_own_cells(GameState, Player) :-
 %        GAME OVER
 % ------------------------
 
+% Does the player have all his home spots filled with ANY balls at the end of his turn
+game_over_by_passive_play(GameState, Player) :-
+    check_own_cells(GameState, Player).
+
 % To check after each player finished their turn (Winner is white/black/none)
 % game_over(+GameState, +Player, -Winner)
 % Has the player reached the enemy's home spots
@@ -275,7 +279,7 @@ game_over(GameState, Player, Player) :-
     check_enemy_cells(GameState, Player), !.
 % Does the player have all his home spots filled with ANY balls at the end of his turn
 game_over(GameState, Player, Enemy) :-
-    check_own_cells(GameState, Player), 
+    game_over_by_passive_play(GameState, Player), 
     next_player(Player, Enemy), !.
 % Has the enemy player run out of moves
 game_over(GameState, Player, Player) :-

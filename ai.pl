@@ -31,11 +31,33 @@ ball_distance_score(GameState, Player, BallCoords, Score) :-
     avg(Dists3, Avg3),
     sumlist([Avg1, Avg2, Avg3], Score).
 
+% Makes the random AI never commit suicide
+% The AI will never block when there are only suicidal moves
+% available, because in that case it will randomly choose from any of the
+% suicidal options available
+attempt_avoid_suicide(GameState, Player, ListOfMoves, Move) :-
+    attempt_avoid_suicide_aux(GameState, Player, ListOfMoves, Move).
+% We think the following scenario SHOULD be impossible, but we are not sure
+attempt_avoid_suicide(_, _, ListOfMoves, Move) :-
+    write('Cannot avoid suicide... I concede!'),
+    random_member(Move, ListOfMoves).
+
+attempt_avoid_suicide_decision(GameState, NewGameState, Player, Residue, _, FinalMove) :-
+    game_over_by_passive_play(NewGameState, Player), !,
+    attempt_avoid_suicide_aux(GameState, Player, Residue, FinalMove), !.
+attempt_avoid_suicide_decision(_, NewGameState, Player, _, Move, Move) :-
+    \+ game_over_by_passive_play(NewGameState, Player).
+
+attempt_avoid_suicide_aux(GameState, Player, ListOfMoves, FinalMove) :-
+    !, \+ length(ListOfMoves, 0),
+    random_select(Move, ListOfMoves, Residue),
+    move(GameState, Move, NewGameState),
+    attempt_avoid_suicide_decision(GameState, NewGameState, Player, Residue, Move, FinalMove).
 
 
 choose_move(GameState, Player, random, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
-    random_member(Move, ListOfMoves).
+    attempt_avoid_suicide(GameState, Player, ListOfMoves, Move).
 
 choose_move(GameState, Player, smart, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
