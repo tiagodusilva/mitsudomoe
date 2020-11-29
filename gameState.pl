@@ -236,3 +236,52 @@ replace_remaining_rings(GameState, white, NewRemainingRings, NewGameState) :-
 replace_remaining_rings(GameState, black, NewRemainingRings, NewGameState) :-
     replace(GameState, 2, NewRemainingRings, NewGameState).
 
+
+% ------------------------
+%         Checks
+% ------------------------
+
+%Checks for player colored balls on the enemy's starting cells
+check_enemy_cells(GameState, Player) :-
+    next_player(Player, Enemy),
+    get_top_elem_initial_cells(GameState, Enemy, Cells),
+    nth0(0, Cells, Elem1),
+    nth0(1, Cells, Elem2),
+    nth0(2, Cells, Elem3),
+    owns_ball(Player, Elem1),
+    owns_ball(Player, Elem2),
+    owns_ball(Player, Elem3).
+
+
+%Checks for any balls on the player initial houses
+check_own_cells(GameState, Player) :-
+    get_top_elem_initial_cells(GameState, Player, Cells),
+    nth0(0, Cells, Elem1),
+    nth0(1, Cells, Elem2),
+    nth0(2, Cells, Elem3),
+    is_ball(Elem1),
+    is_ball(Elem2),
+    is_ball(Elem3).
+
+
+% ------------------------
+%        GAME OVER
+% ------------------------
+
+% To check after each player finished their turn (Winner is white/black/none)
+% game_over(+GameState, +Player, -Winner)
+% Has the player reached the enemy's home spots
+game_over(GameState, Player, Player) :-
+    check_enemy_cells(GameState, Player), !.
+% Does the player have all his home spots filled with ANY balls at the end of his turn
+game_over(GameState, Player, Enemy) :-
+    check_own_cells(GameState, Player), 
+    next_player(Player, Enemy), !.
+% Has the enemy player run out of moves
+game_over(GameState, Player, Player) :-
+    next_player(Player, Enemy),
+    % Does the enemy still have at least one valid move?
+    \+ get_valid_move(GameState, Enemy, _), !.
+% No winner yet
+game_over(_, _, none).
+

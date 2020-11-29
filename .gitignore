@@ -1,0 +1,2 @@
+# Ignore eclipse spyder IDE files (but VS Code ftw)
+.project
