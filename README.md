@@ -146,13 +146,6 @@ No canto inferior esquerdo de cada célula é ainda mostrado o número total de 
 
 O predicado `print_line_mid\4` é responsável por desenhar as N peças no topo da *stack*, mas sempre encostadas à base da *frame* da célula. Para este efeito, o predicado `get_stuffed_elem_from_end0\s` dá-nos qual o código da peça numa dada posição da *stack*, mas como que se estivesse *stuffed* (por exemplo: [1, 2] seria interpretado como [1, 2, 0] para a visualização permanecer correta, mas sem nunca alterar a lista).
 
-
-## Bibliografia
-
-- [Livro de Regras - Mitsudomoe](docs/MITSUDOMOE_EN.pdf)
-- [Documentação ofical do SICStus](https://sicstus.sics.se/documentation.html)
-
-
 ## Screenshots
 
 ### Estado de jogo inicial
@@ -235,8 +228,59 @@ Se nenhum dos casos anteriores se verificar o predicado da return a *Winner* com
 
 A seguir ao predicado **game_loop/3** usamos o predicado **handle_winner/5** que baseado no vencedor mostra a mensagem de vitória ou se este não existir faz a chamada "recursiva" do predicado **game_loop/4**.
 
+### Avaliação do tabuleiro
+
+Para que a AI desenvolvida possa escolher o melhor *move* num certo momento nós usamos o predicado **value/4**. Este predicado retorna o valor para o *GameState*.
+
+Em primeiro, nós verificamos se temos 3 bolas nas nossas posições iniciais. Neste caso quer dizer que a AI se iria "suicidar", logo damos a esta jogada um valor muito alto(valor mau).
+
+De seguida, verificamos se as casas do inimigo contém 3 bolas. Se isto acontecer quer dizer que estamos perante uma jogada vencedora, logo damos-lhe um valor negativo de valor absoluto muito alto de forma a que esta jogada seja escolhida de certeza.
+
+Se nenhuma das condições anteriores se aplicar passamos à verificação normal das jogadas.
+
+Para nós o valor de um tabuleiro consiste em calcular a soma das médias da distância de cada bola a cada célula do oponente(objetivo). 
+
+Valor do Tabuleiro = Média(dist(B1, C1), dist(B1, C2), dist(B1,C3)) +
+                     Média(dist(B2, C1), dist(B2, C2), dist(B2,C3)) +
+                     Média(dist(B3, C1), dist(B3, C2), dist(B3,C3))
+
+**B** -> Bola
+
+**C** -> Casa final do oponente 
+
+### Jogada do computador
+
+A AI implementada tem duas dificuldades: **smart** e **random**.
+
+Na dificuldade **random** o predicado **choose_move/4** usa o predicado **valid_move/3** e depois apenas escolha um membro aleatório do seu retorno *ListOfMoves* usando **random_member/2**. 
+
+Na dificuldade **smart** o predicado **choose_move/4** usa o predicado **valid_move/3** para gerar *ListOfMoves* com todos os moves possíveis. De seguida usamos um predicado criado por nós chamado **min_map/3** que retorna o elemento de uma lista para o qual o valor de um predicado é mínimo. Desta forma criámos um predicado auxiliar que nos desse o valor de um *move*. Desta forma escolhemos sempre o move com o valor mais baixo.
+
+Para determinar o valor de um *move* fazemos uso do predicado **value/4**. No entanto, em vez de apenas calcularmos o valor do *GameState* após um *move* para nós, também calculamos qual o seu valor para o inimigo de forma a tentar maximizar o valor para nós sem ajudar em muito o adversário. A fórmula usada é a seguinte:
+
+Valor de um Move = Valor para o Jogador + Valor para o Oponente * 0.5
+
+De forma a que a AI não fique determinista e se torne um pouco mais interessante a este valor ainda adicionamos um valor aleatório, ou seja, a fórmula passa a ser:
+
+Valor de um Move = Valor para o Jogador + Valor para o Oponente * 0.5 + random(-0.5, 0.5)
+
+Após procurar em *ListOfMoves* pela jogada com o valor mais baixo este valor é retornado para ser usado no jogo.
+
+### Loop de Jogo
+
+O nosso loop de jogo encontra-se num predicado chamado **actual_game_state/4** que contém os seguinte passos:
+
+1. Mostrar o estado atual do jogo no ecrã.
+2. Chamada de **repeat** de forma a que se o jogador der input a uma jogada inválida, possamos voltar a pedir esta jogada.
+3. Chamada a **pick_move** para a escolha de jogada. Se for a AI a jogar a jogada é pedida a **choose_move** e se for um humana a jogada é pedida a **read_move**, ou seja, é pedida no terminal do Sicstus.
+4. Depois é efetuada essa jogada para verificar se é possível e cria-se o *GameState* seguinte.
+5. Depois verificamos se a jogada efetuada acaba o jogo com recurso a **game_over**  e a **handle_winner**.
+6. Caso não haja vencedor, **handle_winner** irá chamar o predicado **game_loop** que apenas tem como objetivo alternar quem é a jogar se for AI vs Humano ou trocar os níveis de dificuldade se for AI vs AI, de forma a usar a dificuldade e modo certo em **actual_game_loop**.
 
 ## Conclusões
 
 
 ## Bibliografia
+
+- [Livro de Regras - Mitsudomoe](docs/MITSUDOMOE_EN.pdf)
+- [Documentação ofical do SICStus](https://sicstus.sics.se/documentation.html)
