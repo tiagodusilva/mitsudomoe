@@ -79,23 +79,16 @@ is_pos_in_bounds(RowIndex, ColIndex) :-
 % ------------------------
 %    GAMESTATE GETTERS
 % ------------------------
-get_board(GameState, Board) :-
-    GameState = [Board | _].
-
-get_white_rings(GameState, WhiteRings) :-
-    nth0(1, GameState, WhiteRings).
-
-get_black_rings(GameState, BlackRings) :-
-    nth0(2, GameState, BlackRings).
+get_board([Board | _], Board).
+get_white_rings([_, WhiteRings | _], WhiteRings).
+get_black_rings([_, _, BlackRings | _], BlackRings).
+get_shown_stack_size([_, _, _, ShownStackSize | _], ShownStackSize).
 
 get_remaining_player_rings(GameState, white, RemainingRings) :-
     get_white_rings(GameState, RemainingRings).
 
 get_remaining_player_rings(GameState, black, RemainingRings) :-
     get_black_rings(GameState, RemainingRings).
-
-get_shown_stack_size(GameState, ShownStackSize) :-
-    nth0(3, GameState, ShownStackSize).
 
 get_row(GameState, RowIndex, Row) :-
     get_board(GameState, Board),
@@ -146,34 +139,27 @@ get_initial_cells(GameState, white, CoordList) :-
     CoordList = [[BeforeBottomRow, 0], [BottomRow, 0], [BottomRow, 1]].
 
 
-get_stacks_if(GameState, PredicateList, StackCoords) :-
-    get_board(GameState, Board),
-    get_stacks_if_board(Board, PredicateList, [0, 0], [], StackCoords).
-
-get_stacks_if_board([], _, _, StackCoords, StackCoords).
-get_stacks_if_board([Row | Board], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
-    get_stacks_if_row(Row, PredicateList, [RowIndex, ColIndex], StackCoords, NextStackCoords),
+get_stack_if_board([], _, _, _) :- !, fail.
+get_stack_if_board([Row | _], PredicateList, CurPos, StackCoords) :-
+    get_stack_if_row(Row, PredicateList, CurPos, StackCoords).
+get_stack_if_board([_ | Board], PredicateList, [RowIndex, ColIndex], StackCoords) :-
     NextRow is RowIndex + 1,
-    get_stacks_if_board(Board, PredicateList, [NextRow, ColIndex], NextStackCoords, FinalStackCoords).
+    get_stack_if_board(Board, PredicateList, [NextRow, ColIndex], StackCoords).
 
-
-get_stacks_if_row([], _, _, StackCoords, StackCoords).
-get_stacks_if_row([Stack | Row], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
+get_stack_if_row([], _, _, _) :- !, fail.
+get_stack_if_row([Stack | _], PredicateList, CurPos, CurPos) :-
     append(PredicateList, [Stack], FilledPredicate),
-    T =.. FilledPredicate,
-    % ite(
-    %     T,
-    %     append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
-    %     NextStackCoords = StackCoords
-    % ),
-    T,
-    append(StackCoords, [[RowIndex, ColIndex]], NextStackCoords),
+    P =.. FilledPredicate, P.
+get_stack_if_row([_ | Row], PredicateList, [RowIndex, ColIndex], StackCoords) :-
     NextCol is ColIndex + 1,
-    get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], NextStackCoords, FinalStackCoords).
-% Used if the predicate call fails
-get_stacks_if_row([_ | Row], PredicateList, [RowIndex, ColIndex], StackCoords, FinalStackCoords) :-
-    NextCol is ColIndex + 1,
-    get_stacks_if_row(Row, PredicateList, [RowIndex, NextCol], StackCoords, FinalStackCoords).
+    get_stack_if_row(Row, PredicateList, [RowIndex, NextCol], StackCoords).
+
+get_stack_if(GameState, PredicateList, Coords) :-
+    get_board(GameState, Board),
+    get_stack_if_board(Board, PredicateList, [0, 0], Coords).
+
+get_stacks_if(GameState, PredicateList, CoordList) :-
+    findall(Coords, get_stack_if(GameState, PredicateList, Coords), CoordList).
 
 is_ball_from_player_on_top_of_stack(Player, Stack) :-
     last(Stack, TopElem),
