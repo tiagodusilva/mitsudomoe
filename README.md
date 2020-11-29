@@ -212,7 +212,28 @@ As coordenadas são sempre representadas em [Row, Col] e um displace é [Coorden
 
 ### Execução de jogadas
 
-O nosso predicado **move/3** está divido em 3 partes
+O nosso predicado **move/3** está divido em 3 partes.
+
+Numa primeira parte fazemos uma chamada ao predicado **new_move/5** que decompõe um *move* nas suas partes (DisplaceRing, DisplaceBall, Displaces, Player).
+
+De seguida, temos a fase de movimento do anel em que usamos o predicado **move_ring_phase/4**. Este predicado por sua vez chama o predicado **place_new_ring/4** ou **move_ring/4** dependendo se queremos mexer um anel já em jogo ou colocar um novo.
+
+Por fim usamos o predicado **move_ball_phase/5** que move tanto a bola especificada no move como os possíveis Displaces gerados por algum vault.
+Este predicado funciona usando os predicados **move_ball/5** que move uma bola e retorna os Displaces se for um vault e **relocate_balls/5** para tratar de qualquer bolas que possam ter de ser realocadas por causa de um vault.
+
+### Final de jogo
+
+Para verificarmos o final de jogo usamos o predicado **game_over/3**.
+
+A primeira condição verificada é se as casas do inimigo ficaram ocupadas todas com bolas com recurso ao predicado **check_enemy_cells/2**. Neste caso o jogador que executou a jogada ganha.
+
+De seguida, verificamos as casas iniciais do jogador que executou a jogada. Esta verificação é feita para prevenir jogo passivo.
+
+Por fim, verificamos se o oponente ficou sem jogadas (por exemplo se não tiver mais rings para colocar em jogo e nenhum dos seus está exposto). Para verificar este caso fazemos uma chamada a **valid_moves** para o oponente e verificamos se o seu output é vazio. Se for quer dizer que o autor da jogada vence.
+
+Se nenhum dos casos anteriores se verificar o predicado da return a *Winner* como none.
+
+A seguir ao predicado **game_loop/3** usamos o predicado **handle_winner/5** que baseado no vencedor mostra a mensagem de vitória ou se este não existir faz a chamada "recursiva" do predicado **game_loop/4**.
 
 
 ## Conclusões
