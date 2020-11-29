@@ -4,23 +4,20 @@
 :- ensure_loaded('utils.pl').
 :- ensure_loaded('moves.pl').
 :- ensure_loaded('input.pl').
+:- ensure_loaded('move_generation.pl').
+:- ensure_loaded('ai.pl').
 
 :- use_module(library(system)).
-:- use_module(library(random)).
 
 
-%%%GAME MODE
-% 1 - H-H
-% 2 - C-H
-% 3 - H-C
-% 4 - C-C 
+% GAME MODE
 mode(1, h-h).
 mode(2, c-h).
 mode(3, h-c).
 mode(4, c-c).
 
 play :-
-    test_game(GameState),
+    initial(GameState),
     print_title,
     print_legend,
     read_mode(ModeNumber, 4),
@@ -52,8 +49,9 @@ actual_game_loop(GameState, Player, Mode, Level) :-
 
 bot_sleep(c-c) :-
     % true.
-    sleep(0.5).
+    sleep(2).
 bot_sleep(_).
+
 
 try_move(GameState, Move, NewGameState) :-
     move(GameState, Move, NewGameState).
@@ -61,7 +59,7 @@ try_move(_, _, _) :-
     write('Impossible move!\n'),
     fail.
 
-
+% handle_winner(+NextGameState, +NextPlayer, +Mode, +Winner, +Level) :-
 handle_winner(NextGameState, NextPlayer, Mode, none, Level) :-
     game_loop(NextGameState, NextPlayer, Mode, Level).
 handle_winner(GameState, NextPlayer, _, white, _) :-
@@ -72,72 +70,7 @@ handle_winner(GameState, NextPlayer, _, black, _) :-
     write('Black won!\n').
 
 
-% STACK CONTENTS
-% 1 : White Ring
-% 2 : Black Ring
-% 3 : White Ball
-% 4 : Black Ball
-
-test_game(GameState) :-
-    GameState = [
-        [  % Game board
-            [ [],     [],     [],  [2], []],
-            [ [],     [],     [2, 4],  [2, 4],     [2, 4]],
-            [ [],     [1, 3],     [],  [],     []],
-            [ [], [], [],  [],     []],
-            [ [1, 3], [], [],  [],     [1, 3]]
-        ],
-        1, % Unplayed white rings
-        0, % Unplayed black rings
-        3  % Shown Stack Size
-    ].
-
-play_test(X) :-
-    test_game(GameState),
-    get_valid_move(GameState, white, X).
-
-
-% To check after each player finished their turn (Winner is white/black/none)
-% game_over(+GameState, +Player, -Winner)
-% Has the player reached the enemy's home spots
-game_over(GameState, Player, Player) :-
-    check_enemy_cells(GameState, Player), !.
-% Does the player have all his home spots filled with ANY balls at the end of his turn
-game_over(GameState, Player, Enemy) :-
-    check_own_cells(GameState, Player), 
-    next_player(Player, Enemy), !.
-% Has the enemy player run out of moves
-game_over(GameState, Player, Player) :-
-    next_player(Player, Enemy),
-    % Does the enemy still have at least one valid move?
-    \+ get_valid_move(GameState, Enemy, _), !.
-% No winner yet
-game_over(_, _, none).
-
-
-%Checks for player colored balls on the enemy's starting cells
-check_enemy_cells(GameState, Player) :-
-    next_player(Player, Enemy),
-    get_top_elem_initial_cells(GameState, Enemy, Cells),
-    nth0(0, Cells, Elem1),
-    nth0(1, Cells, Elem2),
-    nth0(2, Cells, Elem3),
-    owns_ball(Player, Elem1),
-    owns_ball(Player, Elem2),
-    owns_ball(Player, Elem3).
-
-
-%Checks for any balls on the player initial houses
-check_own_cells(GameState, Player) :-
-    get_top_elem_initial_cells(GameState, Player, Cells),
-    nth0(0, Cells, Elem1),
-    nth0(1, Cells, Elem2),
-    nth0(2, Cells, Elem3),
-    is_ball(Elem1),
-    is_ball(Elem2),
-    is_ball(Elem3).
-
-% pick_move(GameState, Player, Mode, Move, Level)
+% pick_move(+GameState, +Player, +Mode, -Move, +Level)
 pick_move(GameState, Player, h-h, Move, _) :-
     read_move(GameState, Player, Move).
 pick_move(GameState, Player, h-c, Move, _) :-
@@ -148,64 +81,46 @@ pick_move(GameState, Player, c-h, Move, Level-_) :-
     choose_move(GameState, Player, Level, Move).
 
 
-choose_move(GameState, Player, random, Move) :-
-    valid_moves(GameState, Player, ListOfMoves),
-    random_member(Move, ListOfMoves).
 
-choose_move(GameState, Player, smart, Move) :-
-    valid_moves(GameState, Player, ListOfMoves),
-    write('Possible Moves: '),
-    length(ListOfMoves, NumMoves),
-    write(NumMoves),
-    nl,
-    % get best move
-    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
+% ------------------------
+%      DEBUG ONLY
+% ------------------------
 
+% STACK CONTENTS
+% 1 : White Ring
+% 2 : Black Ring
+% 3 : White Ball
+% 4 : Black Ball
 
-lambda_evaluate_move(GameState, Player, Move, Value) :-
-    move(GameState, Move, NewGameState),
-    value(NewGameState, Player, ValuePlayer),
-    next_player(Player, NextPlayer),
-    value(NewGameState, NextPlayer, ValueEnemy),
-    random(-0.5, 0.5, Rand),
-    Value is ValuePlayer + ValueEnemy * 0.5 + Rand. % Rand is used to make the AI not deterministic
-    % Value is ValuePlayer + ValueEnemy * 0.5.
+test_game(GameState) :-
+    GameState = [
+        [  % Game board
+            [ [],     [],     [],  [2], [2]],
+            [ [],     [],     [2, 4],  [2],     [2, 4]],
+            [ [],     [2, 4],     [],  [],     []],
+            [ [1, 3], [], [],  [],     []],
+            [ [1, 3], [], [],  [],     [1, 3]]
+        ],
+        1, % Unplayed white rings
+        0, % Unplayed black rings
+        3  % Shown Stack Size
+    ].
 
+print_list([]).
+print_list([H | T]) :-
+    write(H), nl,
+    print_list(T).
 
-% % % % % % DEPTH 2 OPTIONAL STUFF
-choose_move(GameState, Player, smart2, Move) :-
-    valid_moves(GameState, Player, ListOfMoves),
-    % get best move
-    min_map(ListOfMoves, [lambda_evaluate_move_d2, GameState, Player], Move).
+print_all(Pred) :-
+    append(Pred, [X], PL),
+    P =.. PL, P,
+    write(X), nl,
+    fail.
+print_all(_).
 
-%Used to check if a move will make the enemy win on his best play, otherwise calculate value normally
-value_calc(Winner, _, Winner, _, Value) :-
-    Value is 5000.
-value_calc(_, GameState, Player, D1Value, Value) :-
-    next_player(Player, NextPlayer),
-    choose_move_V(GameState, NextPlayer, D2Value),
-    Value is D1Value + 0.2 * D2Value.
-
-lambda_evaluate_move_d2(GameState, Player, Move, Value) :-
-    %Evaluate first play
-    value(GameState, Player, D1Value),
-    %Make first move
-    move(GameState, Move, NewGameState),
-    %get best move of enemy
-    next_player(Player, Enemy),
-    choose_move(NewGameState, Enemy, smart, NextMove),
-    move(NewGameState, NextMove, NextGameState),
-    game_over(GameState, Enemy, Winner),
-    % Calculation of the value if the game didnt end on the enemy move
-    value_calc(Winner, NextGameState, Enemy, D1Value, Value).
-
-%Returns the value for the best move (Used on depth 2)
-choose_move_V(GameState, Player, Value) :-
-    valid_moves(GameState, Player, ListOfMoves),
-    % get best move
-    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move),
-    move(GameState, Move, NewGameState),
-    value(NewGameState, Player, Value).
-
-
-    
+play_test :-
+    test_game(GameState),
+    print_all([get_valid_move, GameState, white]).
+play_test(X) :-
+    test_game(GameState),
+    valid_moves(GameState, white, X).

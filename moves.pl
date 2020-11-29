@@ -1,5 +1,4 @@
 :- use_module(library(lists)).
-:- use_module(library(sets)).
 
 
 % reduce_remaining_rings(+GameState, +Player, -NewGameState)
@@ -74,10 +73,10 @@ can_vault(GameState, Player, [FromCoords, ToCoords], BallsToRelocate) :-
     add_coords(FromCoords, Delta, NextCoords),
     can_vault_aux(GameState, Player, [NextCoords, ToCoords], Delta, [], BallsToRelocate).
 
-% Checks if the ball if of an enemy and then appends it to ballsDisplaced (on vault)
-add_displaced_ball_if(Player, TopElem, FromCoords, BallsDisplaced, [FromCoords | BallsDisplaced]) :-
+% Checks if the ball if of an enemy and then adds it to ballsDisplaced (on vault)
+add_displaced_ball_if(Player, TopElem, FromCoords, BallsToRelocate, [FromCoords | BallsToRelocate]) :-
     \+ owns_ball(Player, TopElem), !.
-add_displaced_ball_if(Player, TopElem, _, BallsDisplaced, BallsDisplaced) :-
+add_displaced_ball_if(Player, TopElem, _, BallsToRelocate, BallsToRelocate) :-
     owns_ball(Player, TopElem).
 
 % can_vault_aux(+GameState, +Player, +Displace, +Delta, +[], -BallsToRelocate)
@@ -176,129 +175,3 @@ relocate_balls(GameState, Player, BallsToDisplace, [Displace | Displacements], N
     \+ same_length(BallsToDisplace, NewBallsToDisplace),
     displace_ball(GameState, Player, Displace, RelocatedGameState),
     relocate_balls(RelocatedGameState, Player, NewBallsToDisplace, Displacements, NewGameState).
-
-% value(+GameState, +Player, -Value)
-% Return a value for the board
-% At the moment only takes into account the distance of the player's balls to the final cells
-value(GameState, Player, Value) :-
-    check_own_cells(GameState, Player),
-    Value is 9998.
-value(GameState, Player, Value) :-
-    check_enemy_cells(GameState, Player),
-    Value is -9998.
-value(GameState, Player, Value) :-
-    get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
-    ball_distance_score(GameState, Player, StackCoords, Value).
-
-% ball_distance_score(+GameState, +Player, +BallCoords, -Score)
-% Returns the average of the distane of each ball to each final spot
-ball_distance_score(GameState, Player, BallCoords, Score) :-
-    next_player(Player, Enemy),
-    get_initial_cells(GameState, Enemy, CoordList),
-    nth0(0, BallCoords, Ball1),
-    nth0(1, BallCoords, Ball2),
-    nth0(2, BallCoords, Ball3),
-    maplist(dist, [Ball1, Ball1, Ball1], CoordList, Dists1),
-    maplist(dist, [Ball2, Ball2, Ball2], CoordList, Dists2),
-    maplist(dist, [Ball3, Ball3, Ball3], CoordList, Dists3),
-    avg(Dists1, Avg1),
-    avg(Dists2, Avg2),
-    avg(Dists3, Avg3),
-    sumlist([Avg1, Avg2, Avg3], Score).
-
-
-
-% AI STUFFS
-
-% Generate & get exposed rings
-lambda_can_ball_be_placed(Player, Stack) :-
-    can_ball_be_placed(Stack, Player).
-get_exposed_ring(GameState, Player, ExposedRing) :-
-    get_stack_if(GameState, [lambda_can_ball_be_placed, Player], ExposedRing).
-get_exposed_rings(GameState, Player, ExposedRings) :-
-    findall(ExposedRing, get_exposed_ring(GameState, Player, ExposedRing), ExposedRings).
-
-
-% Generate & get player balls
-lambda_has_player_ball(Player, Stack) :-
-    last(Stack, Last),
-    owns_ball(Player, Last).
-get_player_ball(GameState, Player, Ball) :-
-    get_stack_if(GameState, [lambda_has_player_ball, Player], Ball).
-get_player_balls(GameState, Player, Balls) :-
-    findall(Ball, get_player_ball(GameState, Player, Ball), Balls).
-
-
-% Generate & get positions to place a ring
-get_ring_placement_location(GameState, PossiblePosition) :-
-    get_stack_if(GameState, [can_ring_be_placed], PossiblePosition).
-get_ring_placement_locations(GameState, PossibleRingPositions) :-
-    findall(PosPosition, get_ring_placement_location(GameState, PosPosition), PossibleRingPositions).
-
-
-% Generate a ring placement
-generate_ring_displacement(GameState, Player, [[-1, -1], RingTo]) :-
-    get_remaining_player_rings(GameState, Player, RemainingRings),
-    RemainingRings > 0,
-    get_stack_if(GameState, [can_ring_be_placed], RingTo).
-
-% Generate a ring movement (from cell A to cell B)
-generate_ring_displacement(GameState, Player, [RingFrom, RingTo]) :-
-    get_exposed_ring(GameState, Player, RingFrom),
-    get_ring_placement_location(GameState, RingTo).
-
-
-get_valid_move(GameState, Player, PossibleMove) :-
-    generate_ring_displacement(GameState, Player, RingDisplacement),
-    move_ring_phase(GameState, Player, RingDisplacement, RingPhaseGameState),
-    get_exposed_ring(RingPhaseGameState, Player, ExposedRing),
-    get_player_ball(GameState, Player, Ball),
-    is_pos_different(ExposedRing, Ball),
-    can_move_ball(RingPhaseGameState, Player, [Ball, ExposedRing], BallsToDisplace),
-    get_enemy_relocation(RingPhaseGameState, Player, BallsToDisplace, EnemyRelocation),
-    new_move(RingDisplacement, [Ball, ExposedRing], EnemyRelocation, Player, PossibleMove).
-
-valid_moves(GameState, Player, ListOfMoves) :-
-    findall(Move, get_valid_move(GameState, Player, Move), ListOfMoves).
-
-
-% ENEMY BALL RELOCATION
-
-% get_enemy_relocation(+GameState, +Player, +BallsToDisplace, -Relocations)
-% If there are no balls to relocate, the output is an empty list
-get_enemy_relocation(_, _, [], []) :- !.
-% If balls need to be relocated, find a possible order of relocations
-get_enemy_relocation(GameState, Player, BallsToDisplace, Relocations) :-
-    next_player(Player, Enemy),
-    get_exposed_rings(GameState, Enemy, EnemyExposedRings),
-    append(EnemyExposedRings, BallsToDisplace, PossibleSpots),
-    !, % Green cut because we know no more solutions would be generated
-    get_outcome(BallsToDisplace, PossibleSpots, Outcome),
-    get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations).
-
-% Given a list of balls to relocate and their possible destinations,
-% generate a list with their possible final locations
-% get_outcome(+BallsToDisplace, +Spots, -Outcome) :-
-get_outcome(BallsToDisplace, Spots, Outcome) :-
-    length(BallsToDisplace, NumBalls),
-    comb(NumBalls, Spots, Outcome),
-    BallsToDisplace \= Outcome.
-
-% From a given outcome, generate the relocations needed to 'perform' it
-% get_relocations_from_outcome(+BallsToDisplace, +Outcome, -Relocations) :-
-get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations) :-
-    % we can operate over these lists as an unordered set
-    intersection(BallsToDisplace, Outcome, PriorityBalls),
-    subtract(BallsToDisplace, PriorityBalls, RemainingBalls),
-    subtract(Outcome, PriorityBalls, FreeSpots),
-    outcome_relocate_balls(PriorityBalls, FreeSpots, Displacements1, RemainingFreeSpots),
-    append(RemainingFreeSpots, PriorityBalls, RemainingSpots),
-    outcome_relocate_balls(RemainingBalls, RemainingSpots, Displacements2, []),
-    append(Displacements1, Displacements2, Relocations).
-
-
-% outcome_relocate_balls(+PriotityBalls, +FreeSpots, -Displacements, -RemainingSpots).
-outcome_relocate_balls([], FreeSpots, [], FreeSpots).
-outcome_relocate_balls([Ball | Balls], [Spot | FreeSpots], [[Ball, Spot] | T], RemainingSpots) :-
-    outcome_relocate_balls(Balls, FreeSpots, T, RemainingSpots).
-

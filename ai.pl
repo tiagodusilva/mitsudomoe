@@ -1,0 +1,58 @@
+:- use_module(library(lists)).
+:- use_module(library(random)).
+
+
+% value(+GameState, +Player, -Value)
+% Return a value for the board
+% At the moment only takes into account the distance of the player's balls to the final cells
+value(GameState, Player, Value) :-
+    check_own_cells(GameState, Player),
+    Value is 9998.
+value(GameState, Player, Value) :-
+    check_enemy_cells(GameState, Player),
+    Value is -9998.
+value(GameState, Player, Value) :-
+    get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
+    ball_distance_score(GameState, Player, StackCoords, Value).
+
+% ball_distance_score(+GameState, +Player, +BallCoords, -Score)
+% Returns the average of the distane of each ball to each final spot
+ball_distance_score(GameState, Player, BallCoords, Score) :-
+    next_player(Player, Enemy),
+    get_initial_cells(GameState, Enemy, CoordList),
+    nth0(0, BallCoords, Ball1),
+    nth0(1, BallCoords, Ball2),
+    nth0(2, BallCoords, Ball3),
+    maplist(dist, [Ball1, Ball1, Ball1], CoordList, Dists1),
+    maplist(dist, [Ball2, Ball2, Ball2], CoordList, Dists2),
+    maplist(dist, [Ball3, Ball3, Ball3], CoordList, Dists3),
+    avg(Dists1, Avg1),
+    avg(Dists2, Avg2),
+    avg(Dists3, Avg3),
+    sumlist([Avg1, Avg2, Avg3], Score).
+
+
+
+choose_move(GameState, Player, random, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    random_member(Move, ListOfMoves).
+
+choose_move(GameState, Player, smart, Move) :-
+    valid_moves(GameState, Player, ListOfMoves),
+    write('Possible Moves: '),
+    length(ListOfMoves, NumMoves),
+    write(NumMoves),
+    nl,
+    % get best move
+    min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
+
+
+lambda_evaluate_move(GameState, Player, Move, Value) :-
+    move(GameState, Move, NewGameState),
+    value(NewGameState, Player, ValuePlayer),
+    next_player(Player, NextPlayer),
+    value(NewGameState, NextPlayer, ValueEnemy),
+    random(-0.5, 0.5, Rand),
+    Value is ValuePlayer + ValueEnemy * 0.5 + Rand. % Rand is used to make the AI not deterministic
+    % Value is ValuePlayer + ValueEnemy * 0.5.
+
