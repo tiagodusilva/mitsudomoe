@@ -279,6 +279,13 @@ O nosso loop de jogo encontra-se num predicado chamado **actual_game_state/4** q
 
 ## Conclusões
 
+O objetivo deste trabalho era desenvolver na linguagem Sicstus Prolog um jogo de tabuleiro incluindo representação gráfica, uma AI simples e uma aleatória e suporte para modos de jogo como por exemplo AI vs Humano ou AI vs AI. Todos os objetivos foram concluídos com sucesso. 
+
+Relativamente a *known issues* pode referir-se que a fórmula de valorização de *GameStates* podia ser melhorada possivelmente para incluir diferentes estratégias, por exemplo, defender as próprias casas ou até bloquear rings do oponente. Outra issue é: se na leitura de coordenadas inserirmos mais carateres do que é suposto ele nas leituras seguintes irá imprimir o *prompt* várias vezes mas sempre aceitando o input inicial se este for o desejado.
+
+Por fim, melhorias possíveis para o futuro seria a implementação de uma AI que calculasse o valor das suas jogadas com vários níveis de profundidade, ou seja, ver até mais do que uma jogada no futuro. Outra possibilidade seria a hipótese de alterar a quantidade de elementos mostrados por stack no terminal, visto que isto é suportado no código. Por fim poderíamos usar tabuleiros maiores do que 5x5 apesar destes não serem referidos nas intruções do jogo, visto que são possíveis de usar na nossa implementação.
+
+No geral, este trabalho contribui significativamente para o nosso entendimento da linguagem Prolog.
 
 ## Bibliografia
 
