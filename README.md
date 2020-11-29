@@ -166,7 +166,7 @@ Pode ser encontrado [aqui](#representação-interna-do-estado-de-jogo).
 
 ### Visualização de estado do jogo
 
-A visualização do jogo é feita da mesma forma do relatório intercalar como pode ser visto [aqui](#visualização-do-estado-de-jogo), com a exceção de as células estarem um poucos mais esticadas horizontalmente, depois do feedback do docente.
+A visualização do jogo não foi alterada desde o relatório intercalar, portanto pode ser visto [aqui](#visualização-do-estado-de-jogo), com a exceção de as células estarem um poucos mais esticadas horizontalmente, depois do feedback do docente.
 
 Relativamente aos menus introduzidos para a seleção de jogadas, dos níveis da AI e para a seleção do modo de jogo, estes podem ser encontrados no ficheiro [input.pl](input.pl).
 
