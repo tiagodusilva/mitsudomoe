@@ -163,3 +163,59 @@ O predicado `print_line_mid\4` é responsável por desenhar as N peças no topo 
 
 ### Estado de jogo final
 ![Initial Game State](docs/images/prolog_intermediate_state.png)
+
+
+## Lógica de jogo
+
+### Representação do estado de jogo
+
+Pode se encontrado [aqui](#representação-interna-do-estado-de-jogo).
+
+### Visualização de estado do jogo
+
+A visualização do jogo é feita da mesma forma do relatório intercalar como pode ser visto [aqui](#visualização-do-estado-de-jogo), com a exceção de as células estarem um poucos mais esticadas horizontalmente, depois do feedback do docente.
+
+Relativamente aos menus introduzidos para a seleção de jogadas, dos níveis da AI e para a seleção do modo de jogo, estes podem ser encontrados no ficheiro [input.pl](input.pl).
+
+Para a leitura do modo de jogo usamos o predicado [read_mode/1](input.pl), que mostra a mensagem com as opções possíveis e depois lê a opção do utilizador.
+
+![Exemplo Modos](docs/images/modes.png)
+
+Para a leitura da dificuldade da AI, se for necessário em função do modo de jogo, lemos a dificuldade (random ou smart) para a AI se o modo for *Humano vs AI* ou duas vezes se o modo for *AI vs AI*.
+
+![Exemplo Niveis](docs/images/levels.png)
+
+Para a leitura de cada jogada e de acordo com a estrutura de cada jogada, começamos por perguntar ao utilizador se quer por um anel novo em campo ou  mover um que ja esteja em campo, sempre perguntando as coordenadas. De seguida as coordenadas da bola que quer mover e as coordenadas de destino.
+
+Toda a introdução de coordenadas pode ser feita na forma de "A3" ou "3A", ou seja, coluna e linha ou vice-versa, com as letras maiúsculas ou minúsculas. Os inputs também não necessitam de um ponto final no fim.
+
+![Exemplo Jogada](docs/images/coords.png)
+
+### Estruturação de um *move*
+
+De forma a representar cada **move** nós usamos uma lista de listas:
+
+As coordenadas são sempre representadas em [Row, Col] e um displace é [Coordenadas Iniciais, Coordenadas Finais].
+
+**Move -> [DisplaceRing, DisplaceBall, [Displaces], Player]**
+
+**DisplaceRing** -> Displace do anel a mexer (Coordenadas iniciais são [-1,-1] se a jogada for colocar um anel novo em jogo)
+
+**DisplaceBall** -> Displace da bola a mexer
+
+**[Displaces]** -> Displaces às bolas inimigas no caso de ocorrer um vault (vazia se não houver ou não ocorrer um vault)
+
+**Player** -> Jogador que realiza a jogada (white/black)
+
+### Lista de jogadas válidas
+
+
+### Execução de jogadas
+
+O nosso predicado **move/3** está divido em 3 partes
+
+
+## Conclusões
+
+
+## Bibliografia
