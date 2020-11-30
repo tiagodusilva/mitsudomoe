@@ -1,15 +1,28 @@
+% In case a read fails, it will clean the entire line
+% If already at end of line it will do nothing, otherwise the input would block for another line
+clean_buf :-
+    \+ at_end_of_line,
+    skip_line,
+    fail, !.
+
 read_code(Code, Possible) :-
     get_code(Code),
-    member(Code, Possible).
+    member(Code, Possible), !.
+read_code(_, _) :-
+    clean_buf.
 read_char(Char, Possible) :-
     get_char(Char),
-    member(Char, Possible).
+    member(Char, Possible), !.
+read_char(_, _) :-
+    clean_buf.
 
 % Inclusive on both ends to facilitate A-Z (but uses their ASCII codes)
 % read_code_range(Char, ['A'-'Z', 'a'-'z']) :-
 read_code_range(Code, Ranges) :-
     get_code(Code),
-    is_code_in_range(Code, Ranges).
+    is_code_in_range(Code, Ranges), !.
+read_code_range(_, _) :-
+    clean_buf.
 
 is_code_in_range(_, []) :-
     fail.
@@ -43,7 +56,7 @@ read_letter(Letter) :-
 
 % Structured oddly to allow either A2 or 2B
 read_coord(Coord) :-
-    read_code_range(Code, [65-90, 97-122, 48-57]),
+    read_code_range(Code, [65-70, 97-102, 48-52]), !,
     read_coord_part2(Code, Number, Col),
     Coord = [Number, Col].
 % A2 format

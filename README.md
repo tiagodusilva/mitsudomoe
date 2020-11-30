@@ -190,7 +190,7 @@ Pode ser encontrado [aqui](#representação-interna-do-estado-de-jogo).
 
 A visualização do jogo não foi alterada desde o relatório intercalar, portanto pode ser visto [aqui](#visualização-do-estado-de-jogo), De acordo com o feedback do docente, as células foram expandidas horizontalmente para o tabuleiro ficar menos esticado.
 
-Os menus introduzidos para a seleção de jogadas, os níveis da AI e a seleção do modo de jogo, podem ser encontrados no ficheiro [input.pl](input.pl).
+Os menus introduzidos para a seleção de jogadas, os níveis da AI e a seleção do modo de jogo, podem ser encontrados no ficheiro [input.pl](input.pl). Caso seja introduzido um input inválido, a linha inteira será ignorada.
 
 Para a leitura do modo de jogo usamos o predicado [read_mode/1](input.pl), que mostra a mensagem com as opções possíveis e depois lê a opção do utilizador.
 
@@ -350,7 +350,7 @@ O nosso loop de jogo encontra-se num predicado chamado **actual_game_state/4** q
 
 O objetivo deste projeto era desenvolver na linguagem Sicstus Prolog um jogo de tabuleiro que incluísse representação gráfica, suporte para modos de jogo como por exemplo AI vs Humano ou AI vs AI e ainda tanto uma AI simples como outra aleatória. Todos os objetivos foram concluídos com sucesso. 
 
-Relativamente a *known issues* pode referir-se que a fórmula de valorização de *GameStates* podia ser melhorada possivelmente para incluir diferentes estratégias, por exemplo, defender as próprias casas ou até bloquear rings do oponente. Outra issue é: se na leitura de coordenadas inserirmos mais carateres do que é suposto, nas leituras seguintes irá imprimir o *prompt* várias vezes mas aceitando sempre o input inicial se este for o desejado.
+Relativamente a *known issues* pode referir-se que a fórmula de valorização de *GameStates* podia ser melhorada possivelmente para incluir diferentes estratégias, por exemplo, defender as próprias casas ou até bloquear rings do oponente.
 
 Por fim, melhorias possíveis para o futuro seria a implementação de uma AI que calculasse o valor das suas jogadas com vários níveis de profundidade, ou seja, ver até mais do que uma jogada no futuro (embora envolva calcular um pelo menos 8 milhões de jogadas válidas). Outra possibilidade seria alterar a quantidade de elementos mostrados por stack no terminal, visto já estar previsto no código do estado de jogo e da visualização. Por fim poderíamos usar tabuleiros maiores do que 5x5 apesar destes não serem referidos nas intruções do jogo, visto que são suportados pela nossa implementação.
 
