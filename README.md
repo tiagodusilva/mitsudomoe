@@ -15,6 +15,27 @@ Instalar e correr o SICStus prolog, caso esteja a ser usado o terminal dedicado 
 
 Para correr o jogo em si, corra `(re)consult('game.pl')` e corra a função `play` sem argumentos.
 
+
+## Índice
+
+1. [Regras de jogo](#regras-de-jogo)
+1. [Representação interna do estado de jogo](#representação-interna-do-estado-de-jogo)
+1. [Visualização do estado de jogo (intercalar)](#visualização-do-estado-de-jogo-(intercalar))
+1. [Screenshots](#screenshots)
+1. [Lógica de jogo](#lógica-de-jogo)
+1. [Representação do estado de jogo](#representação-do-estado-de-jogo)
+1. [Visualização de estado do jogo](#visualização-de-estado-do-jogo)
+1. [Estrutura de um *move*](#estrutura-de-um-move)
+1. [Lista de jogadas válidas](#lista-de-jogadas-válidas)
+1. [Execução de jogadas](#execução-de-jogadas)
+1. [Final de jogo](#final-de-jogo)
+1. [Avaliação do tabuleiro](#avaliação-do-tabuleiro)
+1. [Jogada do computador](#jogada-do-computador)
+1. [Loop de Jogo](#loop-de-jogo)
+1. [Conclusões](#conclusões)
+1. [Bibliografia](#bibliografia)
+
+
 ## Regras de jogo
 
 [Livro de Regras - Mitsudomoe](docs/MITSUDOMOE_EN.pdf)
@@ -67,6 +88,7 @@ A segunda opção é "passar" por cima, em linha reta, de quantas bolas adjacent
 
 Se no fim do turno do jogador todas as suas bolas estiverem no canto oposto do início do jogo, esse jogador ganha.
 
+---
 
 ## Representação interna do estado de jogo
 
@@ -136,7 +158,7 @@ A informação relativa a que jogador joga a seguir é guardada em **Player**:
 * 1 -> Preto
 
 
-## Visualização do estado de jogo
+## Visualização do estado de jogo (intercalar)
 
 O predicado [`display_game\2`](display.pl) desenha no ecrã um tabuleiro de qualquer dimensão até 27x27. Para cada linha do tabuleiro é chamado o predicado `print_line\4`, que é divido em top, mid e bot, desenha as linhas necessárias na consola. Cada célula pode ser identificada por um par número e letra, inspirado pelo sistema do xadrez.
 
@@ -166,42 +188,47 @@ Pode ser encontrado [aqui](#representação-interna-do-estado-de-jogo).
 
 ### Visualização de estado do jogo
 
-A visualização do jogo não foi alterada desde o relatório intercalar, portanto pode ser visto [aqui](#visualização-do-estado-de-jogo), com a exceção de as células estarem um poucos mais esticadas horizontalmente, depois do feedback do docente.
+A visualização do jogo não foi alterada desde o relatório intercalar, portanto pode ser visto [aqui](#visualização-do-estado-de-jogo), De acordo com o feedback do docente, as células foram expandidas horizontalmente para o tabuleiro ficar menos esticado.
 
-Relativamente aos menus introduzidos para a seleção de jogadas, dos níveis da AI e para a seleção do modo de jogo, estes podem ser encontrados no ficheiro [input.pl](input.pl).
+Os menus introduzidos para a seleção de jogadas, os níveis da AI e a seleção do modo de jogo, podem ser encontrados no ficheiro [input.pl](input.pl).
 
 Para a leitura do modo de jogo usamos o predicado [read_mode/1](input.pl), que mostra a mensagem com as opções possíveis e depois lê a opção do utilizador.
 
 ![Exemplo Modos](docs/images/modes.png)
 
-Para a leitura da dificuldade da AI, se for necessário em função do modo de jogo, lemos a dificuldade (random ou smart) para a AI se o modo for *Humano vs AI* ou duas vezes se o modo for *AI vs AI*.
+Para a leitura da dificuldade da AI, lemos a dificuldade (random ou smart) para a AI uma vez se o modo for *Humano vs AI* ou duas vezes se o modo for *AI vs AI*.
 
 ![Exemplo Niveis](docs/images/levels.png)
 
-Para a leitura de cada jogada e de acordo com a estrutura de cada jogada, começamos por perguntar ao utilizador se quer por um anel novo em campo ou  mover um que ja esteja em campo, sempre perguntando as coordenadas. De seguida as coordenadas da bola que quer mover e as coordenadas de destino.
+Para a leitura de cada jogada e de acordo com a sua estrutura, começamos por perguntar ao utilizador se pretende colocar um anel novo ou mover um que já esteja no tabuleiro, perguntando sempre as coordenadas. De seguida as coordenadas da bola que deseja mover e as coordenadas do destino.
 
-Toda a introdução de coordenadas pode ser feita na forma de "A3" ou "3A", ou seja, coluna e linha ou vice-versa, com as letras maiúsculas ou minúsculas. Os inputs também não necessitam de um ponto final no fim.
+Caso seja necessário dar *vault* por cima de bolas inimigas, será necessário o utilizador introduzir como as mover. Caso seja necessário mover mais que uma é mostrado as opções e o utilizador escolhe. Caso haja apenas uma bola para deslocar, o programa assume logo qual é e apenas pede ao utilizador o seu destino.
+
+Toda a introdução de coordenadas pode ser feita na forma de "A3" ou "3A", ou seja, coluna e linha ou vice-versa, com as letras maiúsculas ou minúsculas. Os inputs também não necessitam de um ponto final no fim e são resilientes ao ponto de ser extremamente difícil terminar a sua execução por engano.
 
 ![Exemplo Jogada](docs/images/coords.png)
 
-### Estruturação de um *move*
+### Estrutura de um *move*
 
-De forma a representar cada **move** nós usamos uma lista de listas:
+De forma a representar cada **move** é usado uma lista de listas, para facilitar eventuais alterações futuras:
 
 As coordenadas são sempre representadas em [Row, Col] e um displace é [Coordenadas Iniciais, Coordenadas Finais].
 
-**Move -> [DisplaceRing, DisplaceBall, [Displaces], Player]**
+```
+Move -> [DisplaceRing, DisplaceBall, [Displaces], Player]
+```
 
 **DisplaceRing** -> Displace do anel a mexer (Coordenadas iniciais são [-1,-1] se a jogada for colocar um anel novo em jogo)
 
 **DisplaceBall** -> Displace da bola a mexer
 
-**[Displaces]** -> Displaces às bolas inimigas no caso de ocorrer um vault (vazia se não houver ou não ocorrer um vault)
+**[Displaces]** -> Displaces às bolas inimigas se ocorrer um vault sobre elas (vazia caso contrário)
 
 **Player** -> Jogador que realiza a jogada (white/black)
 
 ### Lista de jogadas válidas
 
+TODO:
 
 ### Execução de jogadas
 
@@ -212,33 +239,33 @@ Numa primeira parte fazemos uma chamada ao predicado **new_move/5** que decompõ
 De seguida, temos a fase de movimento do anel em que usamos o predicado **move_ring_phase/4**. Este predicado por sua vez chama o predicado **place_new_ring/4** ou **move_ring/4** dependendo se queremos mexer um anel já em jogo ou colocar um novo.
 
 Por fim usamos o predicado **move_ball_phase/5** que move tanto a bola especificada no move como os possíveis Displaces gerados por algum vault.
-Este predicado funciona usando os predicados **move_ball/5** que move uma bola e retorna os Displaces se for um vault e **relocate_balls/5** para tratar de qualquer bolas que possam ter de ser realocadas por causa de um vault.
+Este predicado funciona usando os predicados **move_ball/5** que move uma bola e retorna os Displaces a fazer se for um vault e **relocate_balls/5** para tratar de quaisquer bolas que possam ter de ser realocadas por causa de um vault (indicadas pelo predicado anterior).
 
 ### Final de jogo
 
 Para verificarmos o final de jogo usamos o predicado **game_over/3**.
 
-A primeira condição verificada é se as casas do inimigo ficaram ocupadas todas com bolas com recurso ao predicado **check_enemy_cells/2**. Neste caso o jogador que executou a jogada ganha.
+A primeira condição verificada é se as casas do inimigo ficaram ocupadas todas com bolas do jogador, com recurso ao predicado **check_enemy_cells/2**. Neste caso o jogador que executou a jogada ganha.
 
-De seguida, verificamos as casas iniciais do jogador que executou a jogada. Esta verificação é feita para prevenir jogo passivo.
+De seguida, verificamos se as casas iniciais do jogador que executou a jogada estão ocupadas com bolas de qualquer cor (no final da sua própria jogada). Esta verificação é feita para prevenir jogo passivo. Neste caso o inimigo ganha.
 
-Por fim, verificamos se o oponente ficou sem jogadas (por exemplo se não tiver mais rings para colocar em jogo e nenhum dos seus está exposto). Para verificar este caso fazemos uma chamada a **valid_moves** para o oponente e verificamos se o seu output é vazio. Se for quer dizer que o autor da jogada vence.
+Por fim, verificamos se o oponente ficou sem jogadas (por exemplo se não tiver mais anéis para colocar em jogo e nenhum dos seus está exposto). Para verificar este caso fazemos uma chamada a **get_valid_move/3** com o inimigo e caso ela falhe o autor da jogada é declarado como vencedor. Será de relembrar que o predicado mencionado acima gera apenas uma jogada válida (se possível), portanto é bastante mais eficiente do que verificar se a lista de jogadas válidas é vazia.
 
-Se nenhum dos casos anteriores se verificar o predicado da return a *Winner* como none.
+Se nenhum dos casos anteriores se verificar, o predicado unifica *Winner* com none.
 
-A seguir ao predicado **game_loop/3** usamos o predicado **handle_winner/5** que baseado no vencedor mostra a mensagem de vitória ou se este não existir faz a chamada "recursiva" do predicado **game_loop/4**.
+A seguir ao predicado **game_loop/3** é usado o predicado **handle_winner/5** que, baseado no vencedor, mostra a mensagem de vitória ou faz a chamada 'recursiva' do predicado **game_loop/4** se este não existir.
 
 ### Avaliação do tabuleiro
 
-Para que a AI desenvolvida possa escolher o melhor *move* num certo momento nós usamos o predicado **value/4**. Este predicado retorna o valor para o *GameState*.
+Para que a AI desenvolvida possa escolher o melhor *move* num certo momento foi criado o predicado **value/4**, que retorna o valor para de um dado *GameState*.
 
-Em primeiro, nós verificamos se temos 3 bolas nas nossas posições iniciais. Neste caso quer dizer que a AI se iria "suicidar", logo damos a esta jogada um valor muito alto(valor mau).
+Em primeiro lugar, é verificado se existem 3 bolas de qualquer cor nas nossas posições iniciais do jogador. Neste caso a AI iria "suicidar-se", logo damos a esta jogada um valor muito alto, que é avaliado como sendo uma jogada extremamente má.
 
-De seguida, verificamos se as casas do inimigo contém 3 bolas. Se isto acontecer quer dizer que estamos perante uma jogada vencedora, logo damos-lhe um valor negativo de valor absoluto muito alto de forma a que esta jogada seja escolhida de certeza.
+De seguida se as casas do inimigo contiverem as 3 bolas do jogador. Se isto acontecer estamos perante uma jogada vencedora, logo damos-lhe um valor negativo de valor absoluto muito alto de forma a que esta jogada seja escolhida de certeza.
 
 Se nenhuma das condições anteriores se aplicar passamos à verificação normal das jogadas.
 
-Para nós o valor de um tabuleiro consiste em calcular a soma das médias da distância de cada bola a cada célula do oponente(objetivo). 
+O valor de um tabuleiro consiste em calcular a soma das médias da distância de cada bola a cada célula do oponente (objetivo). Quanto menor for este valor melhor é considerada a jogada.
 
 Valor do Tabuleiro = Média(dist(B1, C1), dist(B1, C2), dist(B1,C3)) +
                      Média(dist(B2, C1), dist(B2, C2), dist(B2,C3)) +
@@ -252,40 +279,46 @@ Valor do Tabuleiro = Média(dist(B1, C1), dist(B1, C2), dist(B1,C3)) +
 
 A AI implementada tem duas dificuldades: **smart** e **random**.
 
-Na dificuldade **random** o predicado **choose_move/4** usa o predicado **valid_move/3** e depois apenas escolha um membro aleatório do seu retorno *ListOfMoves* usando **random_member/2**. 
+Na dificuldade **random**, o predicado **choose_move/4** usa o predicado **valid_move/3** e depois escolhe um membro aleatório do *ListOfMoves*.
 
-Na dificuldade **smart** o predicado **choose_move/4** usa o predicado **valid_move/3** para gerar *ListOfMoves* com todos os moves possíveis. De seguida usamos um predicado criado por nós chamado **min_map/3** que retorna o elemento de uma lista para o qual o valor de um predicado é mínimo. Desta forma criámos um predicado auxiliar que nos desse o valor de um *move*. Desta forma escolhemos sempre o move com o valor mais baixo.
+Para impedir que a AI se 'suicidasse' consistentemente durante os primeiros 10 turnos, foi implementada uma verificação extra usando **random_select** que vai extraíndo aleatóriamente uma jogada válida e no caso de levar a um 'suicídio' continua a extração. Caso se esgotem as jogadas possíveis admite derrota e usa **random_member/2** para escolher uma derrota sobre a lista original.
 
-Para determinar o valor de um *move* fazemos uso do predicado **value/4**. No entanto, em vez de apenas calcularmos o valor do *GameState* após um *move* para nós, também calculamos qual o seu valor para o inimigo de forma a tentar maximizar o valor para nós sem ajudar em muito o adversário. A fórmula usada é a seguinte:
+Na dificuldade **smart** o predicado **choose_move/4** usa o predicado **valid_move/3** para gerar *ListOfMoves* com todos os moves possíveis. De seguida usamos um predicado criado por nós chamado **min_map/3** que retorna o elemento de uma lista para o qual o valor de um predicado é mínimo, neste caso, a jogada ótima. 
 
+O predicado auxiliar passado ao **min_map/3** é **lambda_evaluate_move/4**, que simula e calcula o valor de um *move*.
+
+Para determinar o valor de um *move* fazemos uso do predicado [**value/4**](#avaliação-do-tabuleiro). No entanto, em vez de apenas calcularmos o valor do *GameState* após um *move* para nós, também calculamos qual o seu valor para o inimigo de forma a tentar maximizar o valor para nós e minimizar o valor para o adversário. A fórmula usada é a seguinte:
+
+```
 Valor de um Move = Valor para o Jogador + Valor para o Oponente * 0.5
+```
 
-De forma a que a AI não fique determinista e se torne um pouco mais interessante a este valor ainda adicionamos um valor aleatório, ou seja, a fórmula passa a ser:
+De forma a que a AI não fique determinista e se torne um pouco mais interessante, a este valor ainda adicionamos um valor aleatório, ou seja, a fórmula passa a ser:
 
-Valor de um Move = Valor para o Jogador + Valor para o Oponente * 0.5 + random(-0.5, 0.5)
-
-Após procurar em *ListOfMoves* pela jogada com o valor mais baixo este valor é retornado para ser usado no jogo.
+```
+Valor de um Move = Valor para o Jogador + Valor para o Oponente * 0.5 + random(-0.25, 0.25)
+```
 
 ### Loop de Jogo
 
 O nosso loop de jogo encontra-se num predicado chamado **actual_game_state/4** que contém os seguinte passos:
 
 1. Mostrar o estado atual do jogo no ecrã.
-2. Chamada de **repeat** de forma a que se o jogador der input a uma jogada inválida, possamos voltar a pedir esta jogada.
-3. Chamada a **pick_move** para a escolha de jogada. Se for a AI a jogar a jogada é pedida a **choose_move** e se for um humana a jogada é pedida a **read_move**, ou seja, é pedida no terminal do Sicstus.
-4. Depois é efetuada essa jogada para verificar se é possível e cria-se o *GameState* seguinte.
-5. Depois verificamos se a jogada efetuada acaba o jogo com recurso a **game_over**  e a **handle_winner**.
-6. Caso não haja vencedor, **handle_winner** irá chamar o predicado **game_loop** que apenas tem como objetivo alternar quem é a jogar se for AI vs Humano ou trocar os níveis de dificuldade se for AI vs AI, de forma a usar a dificuldade e modo certo em **actual_game_loop**.
+1. Chamada de **pick_move** para a escolha de jogada. Se for a AI a jogar a jogada é pedida a **choose_move** e se for um humana a jogada é pedida através **read_move** ao terminal do Sicstus.
+    - Caso seja humano, chamada de **repeat** tal que, caso o jogador dê input a uma jogada inválida, a possamos voltar a pedir.
+1. Depois é validada e efetuada essa jogada. Em caso de sucesso cria-se o *GameState* seguinte.
+1. Depois verificamos se a jogada efetuada acaba o jogo com recurso a **game_over**  e a **handle_winner**.
+1. Caso não haja vencedor, **handle_winner** irá chamar o predicado **game_loop** que apenas tem como objetivo alternar quem é a jogar se for AI vs Humano ou trocar os níveis de dificuldade se for AI vs AI, de forma a usar a dificuldade e modo certo em **actual_game_loop**.
 
 ## Conclusões
 
-O objetivo deste trabalho era desenvolver na linguagem Sicstus Prolog um jogo de tabuleiro incluindo representação gráfica, uma AI simples e uma aleatória e suporte para modos de jogo como por exemplo AI vs Humano ou AI vs AI. Todos os objetivos foram concluídos com sucesso. 
+O objetivo deste projeto era desenvolver na linguagem Sicstus Prolog um jogo de tabuleiro que incluísse representação gráfica, suporte para modos de jogo como por exemplo AI vs Humano ou AI vs AI e ainda tanto uma AI simples como outra aleatória. Todos os objetivos foram concluídos com sucesso. 
 
-Relativamente a *known issues* pode referir-se que a fórmula de valorização de *GameStates* podia ser melhorada possivelmente para incluir diferentes estratégias, por exemplo, defender as próprias casas ou até bloquear rings do oponente. Outra issue é: se na leitura de coordenadas inserirmos mais carateres do que é suposto ele nas leituras seguintes irá imprimir o *prompt* várias vezes mas sempre aceitando o input inicial se este for o desejado.
+Relativamente a *known issues* pode referir-se que a fórmula de valorização de *GameStates* podia ser melhorada possivelmente para incluir diferentes estratégias, por exemplo, defender as próprias casas ou até bloquear rings do oponente. Outra issue é: se na leitura de coordenadas inserirmos mais carateres do que é suposto, nas leituras seguintes irá imprimir o *prompt* várias vezes mas aceitando sempre o input inicial se este for o desejado.
 
-Por fim, melhorias possíveis para o futuro seria a implementação de uma AI que calculasse o valor das suas jogadas com vários níveis de profundidade, ou seja, ver até mais do que uma jogada no futuro. Outra possibilidade seria a hipótese de alterar a quantidade de elementos mostrados por stack no terminal, visto que isto é suportado no código. Por fim poderíamos usar tabuleiros maiores do que 5x5 apesar destes não serem referidos nas intruções do jogo, visto que são possíveis de usar na nossa implementação.
+Por fim, melhorias possíveis para o futuro seria a implementação de uma AI que calculasse o valor das suas jogadas com vários níveis de profundidade, ou seja, ver até mais do que uma jogada no futuro (embora envolva calcular um pelo menos 8 milhões de jogadas válidas). Outra possibilidade seria alterar a quantidade de elementos mostrados por stack no terminal, visto já estar previsto no código do estado de jogo e da visualização. Por fim poderíamos usar tabuleiros maiores do que 5x5 apesar destes não serem referidos nas intruções do jogo, visto que são suportados pela nossa implementação.
 
-No geral, este trabalho contribui significativamente para o nosso entendimento da linguagem Prolog.
+Este trabalho contribuiu significativamente para o nosso entendimento da linguagem Prolog e dos seus detalhes.
 
 ## Bibliografia
 

@@ -36,12 +36,9 @@ game_loop(GameState, Player, Mode, Level1-Level2) :-
 
 actual_game_loop(GameState, Player, Mode, Level) :-
     display_game(GameState, Player),
-    repeat,
     pick_move(GameState, Player, Mode, Move, Level),
-    % new_move([[4, 1], [1, 3]], [[4, 0], [1, 3]], [[[2, 2], [4, 3]]], Player, Move),
     try_move(GameState, Move, NextGameState),
     next_player(Player, NextPlayer),
-    %Used to check the moves of the computer
     bot_sleep(Mode),
     game_over(NextGameState, Player, Winner),
     handle_winner(NextGameState, NextPlayer, Mode, Winner, Level).
@@ -72,6 +69,7 @@ handle_winner(GameState, NextPlayer, _, black, _) :-
 
 % pick_move(+GameState, +Player, +Mode, -Move, +Level)
 pick_move(GameState, Player, h-h, Move, _) :-
+    repeat,
     read_move(GameState, Player, Move).
 pick_move(GameState, Player, h-c, Move, _) :-
     read_move(GameState, Player, Move).

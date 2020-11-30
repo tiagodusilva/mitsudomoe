@@ -90,15 +90,15 @@ is_valid_direction(RowAdj, ColAdj) :-
     RowAdj =\= 0,
     ColAdj =\= 0,
     % Only true if perfect diagonal
-    abs(RowAdj) =:= abs(ColAdj).
+    abs(RowAdj) =:= abs(ColAdj), !.
 is_valid_direction(RowAdj, ColAdj) :-
     % Checks horizontal movement
     RowAdj =\= 0,
-    ColAdj =:= 0.
+    ColAdj =:= 0, !.
 is_valid_direction(RowAdj, ColAdj) :-
     % Checks vertical movement
     RowAdj =:= 0,
-    ColAdj =\= 0.
+    ColAdj =\= 0, !.
 
 
 nth0_from_end(Index, List, Elem) :-
