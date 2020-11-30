@@ -228,7 +228,43 @@ Move -> [DisplaceRing, DisplaceBall, [Displaces], Player]
 
 ### Lista de jogadas válidas
 
-TODO:
+A geração de jogadas válidas está implementada usando o predicado **get_valid_move/3**, que gera uma jogada possível. O predicado **valid_moves/3** apenas contém um **findall/3** de **get_valid_move/3**.
+
+A geração de uma jogada está dividida em 3 partes:
+1. Se o jogador tiver anéis por colocar, pôr um anel em qualquer casa sem uma bola no topo. Para cada anel exposto, movê-lo para qualquer casa sem uma bola no topo.
+1. Simular a fase de mover o anel, para garantir que a informação que mais tarde necessitamos é correta.
+1. Para cada bola do jogador tentar movê-la para cada casa que tenha um anel exposto.
+1. Caso tenhamos dado *vault* por cima de bolas inimigas realocá-las.
+
+Para gerar cada parte (ex: escolher uma bola ou uma casa para colocar o anél) é usado o predicado **get_stack_if/3** que recebe um predicado e todos os seus argumentos (à exceção do último) e devolve a posição da primeira *stack* do tabuleiro para a qual o predicado é verdade. Com backtracking irá percorrer o tabuleiro inteiro e gerar todas as coordenadas onde o predicado é verdadeiro.
+
+Caso haja bolas inimigas para mover, o processo é um pouco diferente:
+1. O predicado **get_enemy_relocation/4** gera uma e uma só vez cada *outcome* possível. Um *outcome* é definido como o resultado final, isto é, onde ficam as bolas inimigas no final da jogada.
+
+1. Cada *outcome* é tratado como um conjunto de posições e é gerado através das combinações de todas as posições possíveis, as bolas a mover e os anéis inimigos expostos, excetuando o conjunto completo das bolas a mover. Esta operação é efetuada no predicado **get_outcome/3**.
+
+    Para garantir que geramos todas as possibilidades corretas, é necessário ter em atenção que é possível deslocar as bolas das posições {A, B, C} para {D, A, B}. Como a ordem de mover as bolas ser arbitrária, podemos mover A para D, depois B para onde estava A e finalmente C para onde estava B.
+
+    Assim sabemos que no pior caso teremos `8C3 - 1 = 56` *outcomes*. 8 posições possíveis excetuando o caso em que as bolas ficam todas nas suas posições antigas, pois é impossível.
+
+1. Dado um *outcome* qualquer e as bolas que é necessário mover conseguimos inferir pelo menos uma ordem de movimentos que leva ao *outcome*. O predicado **get_relocations_from_outcome/3**.
+
+    Esta operação pode ser descrita de seguinte forma: Seja 'B' o conjunto de bolas a mover e 'O' o conjunto de posições do *outcome*:
+    - P é o conjunto de posições das bolas com prioridade a mover, isto é, bolas que já estejam numa das posições do outcome, pois têm que ser movidas primeiro
+    - R é o conjunto de posições das bolas sem prioridade
+    - F é o conjunto de posições das posições livres para mover a bola
+
+    ```
+    P = B ∩ O
+    R = B \ P
+    F = P \ P
+    ```
+
+    1. Movemos todas as bolas prioritárias para uma das posições livres e adicionamos a posição original de cada ao conjunto de posições livres.
+    1. Movemos as restantes bolas para as restantes posições livres, adicionando a posição original de cada ao conjunto de posições livres.
+    1. Juntar as duas listas de deslocamentos para obter as recolocações ordenadas de forma válida
+
+Graças à logica descrita acima, geramos todas as jogadas possíveis que levam a um resultado diferente uma e uma só vez.
 
 ### Execução de jogadas
 

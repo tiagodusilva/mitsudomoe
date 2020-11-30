@@ -82,8 +82,7 @@ get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations) :-
     intersection(BallsToDisplace, Outcome, PriorityBalls),
     subtract(BallsToDisplace, PriorityBalls, RemainingBalls),
     subtract(Outcome, PriorityBalls, FreeSpots),
-    outcome_relocate_balls(PriorityBalls, FreeSpots, Displacements1, RemainingFreeSpots),
-    append(RemainingFreeSpots, PriorityBalls, RemainingSpots),
+    outcome_relocate_balls(PriorityBalls, FreeSpots, Displacements1, RemainingSpots),
     outcome_relocate_balls(RemainingBalls, RemainingSpots, Displacements2, []),
     append(Displacements1, Displacements2, Relocations).
 
@@ -91,4 +90,4 @@ get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations) :-
 % outcome_relocate_balls(+PriotityBalls, +FreeSpots, -Displacements, -RemainingSpots).
 outcome_relocate_balls([], FreeSpots, [], FreeSpots).
 outcome_relocate_balls([Ball | Balls], [Spot | FreeSpots], [[Ball, Spot] | T], RemainingSpots) :-
-    outcome_relocate_balls(Balls, FreeSpots, T, RemainingSpots).
+    outcome_relocate_balls(Balls, [Ball | FreeSpots], T, RemainingSpots).
