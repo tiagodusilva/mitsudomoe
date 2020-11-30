@@ -56,7 +56,7 @@ read_letter(Letter) :-
 
 % Structured oddly to allow either A2 or 2B
 read_coord(Coord) :-
-    read_code_range(Code, [65-70, 97-102, 48-52]), !,
+    read_code_range(Code, [65-69, 97-101, 48-52]), !,
     read_coord_part2(Code, Number, Col),
     Coord = [Number, Col].
 % A2 format
