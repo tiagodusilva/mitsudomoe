@@ -321,7 +321,7 @@ Para impedir que a AI se 'suicidasse' consistentemente durante os primeiros 10 t
 
 Na dificuldade **smart** o predicado **choose_move/4** usa o predicado **valid_move/3** para gerar *ListOfMoves* com todos os moves possíveis. De seguida usamos um predicado criado por nós chamado **min_map/3** que retorna o elemento de uma lista para o qual o valor de um predicado é mínimo, neste caso, a jogada ótima. 
 
-O predicado auxiliar passado ao **min_map/3** é **lambda_evaluate_move/4**, que simula e calcula o valor de um *move*.
+O predicado auxiliar passado ao **min_map/3** é **lambda_evaluate_move/4**, que simula e calcula o valor de um *move*. Atualmente a decisão da melhor jogada é bastante rápida, mas é usado um **sleep(1)** para permitir visualizar melhor as jogadas da AI.
 
 Para determinar o valor de um *move* fazemos uso do predicado [**value/4**](#avaliação-do-tabuleiro). No entanto, em vez de apenas calcularmos o valor do *GameState* após um *move* para nós, também calculamos qual o seu valor para o inimigo de forma a tentar maximizar o valor para nós e minimizar o valor para o adversário. A fórmula usada é a seguinte:
 

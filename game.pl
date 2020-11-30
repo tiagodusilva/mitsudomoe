@@ -49,7 +49,7 @@ bot_sleep(c-c) :-
     sleep(1).
 bot_sleep(_).
 
-
+% Prints 'Impossible move' to the console in case an invalid move was attempted
 try_move(GameState, Move, NewGameState) :-
     move(GameState, Move, NewGameState).
 try_move(_, _, _) :-

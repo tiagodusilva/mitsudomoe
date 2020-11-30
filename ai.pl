@@ -12,7 +12,7 @@ value(GameState, Player, Value) :-
     check_enemy_cells(GameState, Player),
     Value is -9998.
 value(GameState, Player, Value) :-
-    get_stacks_if(GameState, [is_ball_from_player_on_top_of_stack, Player], StackCoords),
+    get_stacks_if(GameState, [lambda_has_player_ball, Player], StackCoords),
     ball_distance_score(GameState, Player, StackCoords, Value).
 
 % ball_distance_score(+GameState, +Player, +BallCoords, -Score)
@@ -42,23 +42,27 @@ attempt_avoid_suicide(_, _, ListOfMoves, Move) :-
     write('Cannot avoid suicide... I concede!'),
     random_member(Move, ListOfMoves).
 
+% If the move would result in a suicide, it will select another ball
 attempt_avoid_suicide_decision(GameState, NewGameState, Player, Residue, _, FinalMove) :-
     game_over_by_passive_play(NewGameState, Player), !,
     attempt_avoid_suicide_aux(GameState, Player, Residue, FinalMove), !.
+% Found a move that does not end up in suicide, so it will use that move
 attempt_avoid_suicide_decision(_, NewGameState, Player, _, Move, Move) :-
     \+ game_over_by_passive_play(NewGameState, Player).
 
+% Selects different moves until there are no more moves available
 attempt_avoid_suicide_aux(GameState, Player, ListOfMoves, FinalMove) :-
     !, \+ length(ListOfMoves, 0),
     random_select(Move, ListOfMoves, Residue),
     move(GameState, Move, NewGameState),
     attempt_avoid_suicide_decision(GameState, NewGameState, Player, Residue, Move, FinalMove).
 
-
+% Random AI: Will randomly choose any non-suicidal option
 choose_move(GameState, Player, random, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
     attempt_avoid_suicide(GameState, Player, ListOfMoves, Move).
 
+% Smart AI: Chooses the most optimal move possible (according to the provided value function)
 choose_move(GameState, Player, smart, Move) :-
     valid_moves(GameState, Player, ListOfMoves),
     write('Possible Moves: '),
@@ -68,7 +72,7 @@ choose_move(GameState, Player, smart, Move) :-
     % get best move
     min_map(ListOfMoves, [lambda_evaluate_move, GameState, Player], Move).
 
-
+% Predicate passed to min_map to translate a Move into a numerical Value for optimization
 lambda_evaluate_move(GameState, Player, Move, Value) :-
     move(GameState, Move, NewGameState),
     value(NewGameState, Player, ValuePlayer),

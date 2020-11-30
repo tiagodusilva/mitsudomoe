@@ -144,14 +144,13 @@ move_ball(GameState, Player, Displace, NewGameState, BallsToDisplace) :-
     can_move_ball(GameState, Player, Displace, BallsToDisplace),
     displace_ball(GameState, Player, Displace, NewGameState).
 
-
+% Responsible for the first part of a move: Placing or moving a ring
 move_ring_phase(GameState, Player, [[-1, -1], RingToCoords], RingPhaseGameState) :-
     place_new_ring(GameState, Player, RingToCoords, RingPhaseGameState).
 move_ring_phase(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState) :-
     move_ring(GameState, Player, [RingFromCoords, RingToCoords], RingPhaseGameState).
 
-
-% TODO: Finish this: Add verification for relocated balls
+% Responsible for the second & third part of a move: Moving a ball and relocating vaulted enemy balls
 move_ball_phase(RingPhaseGameState, Player, BallDisplace, BallRelocations, NewGameState) :-
     move_ball(RingPhaseGameState, Player, BallDisplace, MovedBallGameState, BallsToDisplace),
     %Relocate balls after a vault

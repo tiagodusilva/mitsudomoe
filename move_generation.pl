@@ -38,7 +38,7 @@ generate_ring_displacement(GameState, Player, [RingFrom, RingTo]) :-
     get_exposed_ring(GameState, Player, RingFrom),
     get_ring_placement_location(GameState, RingTo).
 
-
+% Generates a valid move, consecutive calls with backtracking generates every different move only once
 get_valid_move(GameState, Player, PossibleMove) :-
     generate_ring_displacement(GameState, Player, RingDisplacement),
     move_ring_phase(GameState, Player, RingDisplacement, RingPhaseGameState),

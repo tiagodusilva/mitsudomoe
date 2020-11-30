@@ -26,13 +26,17 @@ comb(N,[_|T],Comb):- N>0,comb(N,T,Comb).
 combinations(N, Input, Output) :-
     findall(X, comb(N, Input, X), Output).
 
+% Generates every combination except the one especified in +Except
 combinations_except(N, Input, Except, Output) :-
-    findall(X, (comb(N, Input, X), X \= Except), Output).
+    findall(X, (comb(N, Input, X), \+ are_lists_equal(X, Except)), Output).
 
+% Checks if two lists are exactly equal (shallow)
 are_lists_equal([], []).
 are_lists_equal([H | T1], [H | T2]) :-
     are_lists_equal(T1, T2).
 
+% Applies a predicate to every member of a list, converts it to a numeric value
+% and selects in -Min the one that generates the lowest value
 min_map(List, Predicate, Min) :-
     min_map(List, Predicate, Min, _, 99999).
 
@@ -56,11 +60,13 @@ min_map_is_better(_, _, CurBest, CurBestVal, NextBest, NextBestVal) :-
 %   POSITION MANIPULATION
 % ------------------------
 
+% Sums two coords together (useful for coords + vector cases)
 add_coords([X1, Y1], [X2, Y2], Result) :-
     Rx is X1 + X2,
     Ry is Y1 + Y2,
     Result = [Rx, Ry].
 
+% Checks if two coords are different
 is_pos_different([CoordsA, CoordsB]) :- is_pos_different(CoordsA, CoordsB).
 is_pos_different([RowIndexA, _], [RowIndexB, _]) :-
     \+ RowIndexA is RowIndexB, !.
@@ -87,11 +93,11 @@ get_direction([[FromRowIndex, FromColIndex], [ToRowIndex, ToColIndex]], [DeltaRo
     DeltaRow is sign(RowAdj),
     DeltaCol is sign(ColAdj).
 
-
+% Checks if a vector is horizontal, vertical, or a 'pefect diagonal' (eg: [1, 1], [-3, 3])
 is_valid_direction(RowAdj, ColAdj) :-
+    % Checks perfect diagonal
     RowAdj =\= 0,
     ColAdj =\= 0,
-    % Only true if perfect diagonal
     abs(RowAdj) =:= abs(ColAdj), !.
 is_valid_direction(RowAdj, ColAdj) :-
     % Checks horizontal movement
@@ -102,14 +108,16 @@ is_valid_direction(RowAdj, ColAdj) :-
     RowAdj =:= 0,
     ColAdj =\= 0, !.
 
-
+% Gets the nth element from the end of a list
 nth0_from_end(Index, List, Elem) :-
     reverse(List, RevList),
     nth0(Index, RevList, Elem).
 
+% Calculates the euclidian distance between two points
 dist([X1, Y1], [X2, Y2], Result) :-
     Result is sqrt(exp(X1 - X2, 2) + exp(Y1 - Y2, 2)).
 
+% Calculates the average of a list
 avg(List, Result) :-
     length(List, Len),
     sumlist(List, Sum),

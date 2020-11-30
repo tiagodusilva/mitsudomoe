@@ -139,6 +139,15 @@ get_initial_cells(GameState, white, CoordList) :-
     CoordList = [[BeforeBottomRow, 0], [BottomRow, 0], [BottomRow, 1]].
 
 
+% ------------------------
+%     GET STACK IF
+% ------------------------
+
+% The following predicates are used to create the predicate get_stack_if and get_stacks_if
+% Given a predicate list that will be appended a stack, in case the predicate is successful
+% the position of that stack will be returned
+% Successive calls with backtracking will result in all the stacks for which the predicate is true
+
 get_stack_if_board([], _, _, _) :- !, fail.
 get_stack_if_board([Row | _], PredicateList, CurPos, StackCoords) :-
     get_stack_if_row(Row, PredicateList, CurPos, StackCoords).
@@ -160,10 +169,6 @@ get_stack_if(GameState, PredicateList, Coords) :-
 
 get_stacks_if(GameState, PredicateList, CoordList) :-
     findall(Coords, get_stack_if(GameState, PredicateList, Coords), CoordList).
-
-is_ball_from_player_on_top_of_stack(Player, Stack) :-
-    last(Stack, TopElem),
-    owns_ball(Player, TopElem).
 
 % ------------------------
 %     MOVE DEFINITION
