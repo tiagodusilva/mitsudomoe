@@ -29,7 +29,9 @@ combinations(N, Input, Output) :-
 combinations_except(N, Input, Except, Output) :-
     findall(X, (comb(N, Input, X), X \= Except), Output).
 
-
+are_lists_equal([], []).
+are_lists_equal([H | T1], [H | T2]) :-
+    are_lists_equal(T1, T2).
 
 min_map(List, Predicate, Min) :-
     min_map(List, Predicate, Min, _, 99999).

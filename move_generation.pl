@@ -55,35 +55,34 @@ valid_moves(GameState, Player, ListOfMoves) :-
 
 % ENEMY BALL RELOCATION
 
-% get_enemy_relocation(+GameState, +Player, +BallsToDisplace, -Relocations)
+% get_enemy_relocation(+GameState, +Player, +BallsToRelocate, -Relocations)
 % If there are no balls to relocate, the output is an empty list
 get_enemy_relocation(_, _, [], []) :- !.
 % If balls need to be relocated, find a possible order of relocations
-get_enemy_relocation(GameState, Player, BallsToDisplace, Relocations) :-
+get_enemy_relocation(GameState, Player, BallsToRelocate, Relocations) :-
     next_player(Player, Enemy),
     get_exposed_rings(GameState, Enemy, EnemyExposedRings),
-    append(EnemyExposedRings, BallsToDisplace, PossibleSpots),
-    !, % Green cut because we know no more solutions would be generated
-    get_outcome(BallsToDisplace, PossibleSpots, Outcome),
-    get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations).
+    append(EnemyExposedRings, BallsToRelocate, PossibleSpots),
+    get_outcome(BallsToRelocate, PossibleSpots, Outcome),
+    get_relocations_from_outcome(BallsToRelocate, Outcome, Relocations).
 
 % Given a list of balls to relocate and their possible destinations,
 % generate a list with their possible final locations
-% get_outcome(+BallsToDisplace, +Spots, -Outcome) :-
-get_outcome(BallsToDisplace, Spots, Outcome) :-
-    length(BallsToDisplace, NumBalls),
+% get_outcome(+BallsToRelocate, +Spots, -Outcome) :-
+get_outcome(BallsToRelocate, Spots, Outcome) :-
+    length(BallsToRelocate, NumBalls),
     comb(NumBalls, Spots, Outcome),
-    BallsToDisplace \= Outcome.
+    \+ are_lists_equal(BallsToRelocate, Outcome).
 
 % From a given outcome, generate the relocations needed to 'perform' it
-% get_relocations_from_outcome(+BallsToDisplace, +Outcome, -Relocations) :-
-get_relocations_from_outcome(BallsToDisplace, Outcome, Relocations) :-
+% get_relocations_from_outcome(+BallsToRelocate, +Outcome, -Relocations) :-
+get_relocations_from_outcome(BallsToRelocate, Outcome, Relocations) :-
     % we can operate over these lists as an unordered set
-    intersection(BallsToDisplace, Outcome, PriorityBalls),
-    subtract(BallsToDisplace, PriorityBalls, RemainingBalls),
+    intersection(BallsToRelocate, Outcome, PriorityBalls),
+    subtract(BallsToRelocate, PriorityBalls, RemainingBalls),
     subtract(Outcome, PriorityBalls, FreeSpots),
     outcome_relocate_balls(PriorityBalls, FreeSpots, Displacements1, RemainingSpots),
-    outcome_relocate_balls(RemainingBalls, RemainingSpots, Displacements2, []),
+    outcome_relocate_balls(RemainingBalls, RemainingSpots, Displacements2, _),
     append(Displacements1, Displacements2, Relocations).
 
 
